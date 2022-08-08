@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/onsi/gomega v1.18.1
+	github.com/openkruise/kruise-api v1.2.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.24.2

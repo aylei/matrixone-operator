@@ -26,7 +26,7 @@ const (
 
 // syncReplicas controls the real replicas field of the logset pods
 func syncReplicas(ls *v1alpha1.LogSet, sts *kruisev1.StatefulSet) {
-	sts.Spec.Replicas = &ls.Spec.Replicas
+	sts.Spec.Replicas = ls.Spec.Replicas
 }
 
 // syncPodMeta controls the metadata of the underlying logset pods, update meta might not need to trigger rolling-update

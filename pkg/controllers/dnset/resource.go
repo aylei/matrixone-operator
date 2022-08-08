@@ -17,12 +17,15 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
+	defaultReplica = 1
 	logLevel       = "debug"
 	serviceType    = "dn"
 	logFormatType  = "json"
@@ -30,14 +33,16 @@ const (
 	localFSName    = "local"
 	localFSBackend = "DISK"
 	dataDir        = "/store/dn"
-	s3FSName       = "s3"
-	s3BackendType  = "DISK"
-	s3BucketPath   = "/store/dn"
 	dnUUID         = ""
 	dnTxnBackend   = "MEM"
 	configFile     = "dn-config.toml"
 	listenAddress  = ""
 	serviceAddress = ""
+	dataVolume     = "data"
+	dataPath       = "/var/lib/dnservice"
+	configVolume   = "config"
+	configPath     = "/etc/dnservice"
+	PodNameEnvKey  = "POD_NAME"
 )
 
 // buildHeadlessSvc build the initial headless service object for the given dnset
@@ -69,6 +74,7 @@ func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
 
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
+			Type:      dn.Spec.ServiceType,
 			Selector:  common.SubResourceLabels(dn),
 		},
 	}
@@ -76,22 +82,42 @@ func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
 }
 
 // buildDNSet return kruise CloneSet as dn resource
-func buildDNSet(dn *v1alpha1.DNSet, hSvc *corev1.Service) *kruise.CloneSet {
+func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 	dnCloneSet := &kruise.CloneSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
 			Name:      getDNSetName(dn),
 		},
 		Spec: kruise.CloneSetSpec{
-			Replicas:             nil,
-			Selector:             nil,
-			Template:             corev1.PodTemplateSpec{},
-			VolumeClaimTemplates: nil,
-			ScaleStrategy:        kruise.CloneSetScaleStrategy{},
-			UpdateStrategy:       kruise.CloneSetUpdateStrategy{},
-			RevisionHistoryLimit: nil,
-			MinReadySeconds:      0,
-			Lifecycle:            nil,
+			Replicas: nil,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: common.SubResourceLabels(dn),
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        dn.Name,
+					Namespace:   dn.Namespace,
+					Labels:      common.SubResourceLabels(dn),
+					Annotations: map[string]string{},
+				},
+			},
+			ScaleStrategy: kruise.CloneSetScaleStrategy{
+				PodsToDelete:   dn.Spec.ScaleStrategy.PodsToDelete,
+				MaxUnavailable: dn.Spec.ScaleStrategy.MaxUnavailable,
+			},
+			UpdateStrategy: kruise.CloneSetUpdateStrategy{
+				Type:                  dn.Spec.UpdateStrategy.Type,
+				Partition:             dn.Spec.UpdateStrategy.Partition,
+				MaxUnavailable:        dn.Spec.UpdateStrategy.MaxUnavailable,
+				MaxSurge:              dn.Spec.UpdateStrategy.MaxSurge,
+				Paused:                dn.Spec.UpdateStrategy.Paused,
+				PriorityStrategy:      dn.Spec.UpdateStrategy.PriorityStrategy,
+				ScatterStrategy:       dn.Spec.UpdateStrategy.ScatterStrategy,
+				InPlaceUpdateStrategy: dn.Spec.UpdateStrategy.InPlaceUpdateStrategy,
+			},
+			RevisionHistoryLimit: dn.Spec.RevisionHistoryLimit,
+			MinReadySeconds:      dn.Spec.MinReadySeconds,
+			Lifecycle:            dn.Spec.Lifecycle,
 		},
 	}
 
@@ -112,16 +138,18 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 				"format":   logFormatType,
 				"max-size": logMaxSize,
 			},
-			"file-service.local": map[string]interface{}{
+			// fileservice config for local cache
+			"fileservice": map[string]interface{}{
 				"name":     localFSName,
 				"backend":  localFSBackend,
 				"data-dir": dataDir,
 			},
-			"file-service.object": map[string]interface{}{
-				"name":    s3FSName,
-				"backend": s3BackendType,
-				"dat-dir": s3BucketPath,
-			},
+			// TODO: config for remote storage
+			//"file-service.object": map[string]interface{}{
+			//	"name":    s3FSName,
+			//	"backend": s3BackendType,
+			//	"dat-dir": s3BucketPath,
+			//},
 			"dn": map[string]interface{}{
 				"uuid":            dnUUID,
 				"listen-address":  listenAddress,
@@ -154,4 +182,68 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	return configMap, nil
 
+}
+
+func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
+	dataPVC := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: dataVolume,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceStorage: dn.Spec.CacheVolume.Size,
+				},
+			},
+			StorageClassName: dn.Spec.CacheVolume.StorageClassName,
+		},
+	}
+	tpls := []corev1.PersistentVolumeClaim{dataPVC}
+	dn.Spec.Overlay.AppendVolumeClaims(&tpls)
+	cloneSet.Spec.VolumeClaimTemplates = tpls
+}
+
+func syncReplicas(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	if ds.Spec.Replicas != nil {
+		ds.Spec.Replicas = cs.Spec.Replicas
+	}
+
+	d := int32(defaultReplica)
+	ds.Spec.Replicas = &d
+}
+
+func syncPodMeta(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	ds.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
+}
+
+func syncPodSpec(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	main := corev1.Container{
+		Name:      v1alpha1.ContainerMain,
+		Image:     ds.Spec.Image,
+		Resources: ds.Spec.Resources,
+		VolumeMounts: []corev1.VolumeMount{
+			{Name: dataVolume, ReadOnly: true, MountPath: dataPath},
+			{Name: configVolume, ReadOnly: true, MountPath: configPath},
+		},
+		Env: []corev1.EnvVar{{
+			Name: PodNameEnvKey,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		}},
+	}
+	ds.Spec.Overlay.OverlayMainContainer(&main)
+	podSpec := corev1.PodSpec{
+		Containers: []corev1.Container{main},
+		ReadinessGates: []corev1.PodReadinessGate{{
+			ConditionType: pub.InPlaceUpdateReady,
+		}},
+	}
+	common.SyncTopology(ds.Spec.TopologyEvenSpread, &podSpec)
+
+	ds.Spec.Overlay.OverlayPodSpec(&podSpec)
+	cs.Spec.Template.Spec = podSpec
 }

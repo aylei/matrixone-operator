@@ -6,8 +6,10 @@ import (
 )
 
 type DNSetSpec struct {
-	DNSetBasic `json:",inline"`
-
+	DNSetBasic     `json:",inline"`
+	ScaleStrategy  CloneSetScaleStrategy  `json:"scaleStrategy,omitempty"`
+	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
+	CloneSetCommon `json:",inline"`
 	// +optional
 	Overlay *Overlay `json:"overlay,omitempty"`
 }
@@ -23,8 +25,8 @@ type DNSetBasic struct {
 	// +optional
 	// +kubebuilder:default=ClusterIP
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
-	ServiceType corev1.Service `json:"serviceType,omitempty"`
-	
+	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
+
 	// CacheVolume is the desired local cache volume for DNSet,
 	// node storage will be used if not specified
 	// +optional

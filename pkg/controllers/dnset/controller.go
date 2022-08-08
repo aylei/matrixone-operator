@@ -16,47 +16,59 @@ package dnset
 
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type Controller struct {
-	targetNamespacedName types.NamespacedName
-	cloneSet             *kruise.CloneSet
-	service              *corev1.Service
-	hService             *corev1.Service
+type DNSetActor struct{}
+
+var _ recon.Actor[*v1alpha1.DNSet] = &DNSetActor{}
+
+type WithResources struct {
+	*DNSetActor
+	cloneSet *kruise.CloneSet
 }
 
-var _ recon.Actor[*v1alpha1.DNSet] = &Controller{}
+func (d *DNSetActor) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[*v1alpha1.DNSet], error) {
+	ds := ctx.Obj
 
-func (c *Controller) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[*v1alpha1.DNSet], error) {
-	cloneSet := c.cloneSet
-	err, foundCs := util.IsFound(ctx.Get(c.targetNamespacedName, cloneSet))
+	svc := &corev1.Service{}
+	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, svc))
+
+	cloneSet := &kruise.CloneSet{}
+	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, cloneSet))
+
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service cloneset")
 	}
 
-	if !foundCs {
-		return c.Create, nil
+	if !foundCs || !foundSvc {
+		return d.Create, nil
 	}
 	return nil, nil
 }
 
-func (c *Controller) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error) {
+func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error) {
 	dn := ctx.Obj
 	var errs error
 
-	svcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: dn.Name}, c.service)
+	svcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: dn.Name}, &corev1.Service{})
 	err = multierr.Append(errs, err)
-	hSvcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetHeadlessSvcName(dn)}, c.hService)
+
+	hSvcExit, err := ctx.Exist(client.ObjectKey{
+		Namespace: dn.Namespace, Name: getDNSetHeadlessSvcName(dn)},
+		&corev1.Service{})
 	errs = multierr.Append(errs, err)
-	dnSetExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, c.cloneSet)
+
+	dnSetExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, &kruise.CloneSet{})
 	errs = multierr.Append(errs, err)
 
 	res := !hSvcExit && !dnSetExit && !svcExit
@@ -64,7 +76,36 @@ func (c *Controller) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 	return res, nil
 }
 
-func (c *Controller) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
+func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
+	ds := ctx.Obj
 
+	hSvc := buildHeadlessSvc(ds)
+	dsCloneSet := buildDNSet(ds)
+	svc := buildSvc(ds)
+	syncReplicas(ds, dsCloneSet)
+	syncPodMeta(ds, dsCloneSet)
+	syncPodSpec(ds, dsCloneSet)
+	syncPersistentVolumeClaim(ds, dsCloneSet)
+	configMap, err := buildDNSetConfigMap(ds)
+	if err != nil {
+		return err
+	}
+
+	if err := common.SyncConfigMap(ctx, &dsCloneSet.Spec.Template.Spec, configMap); err != nil {
+		return err
+	}
+
+	// create all resources
+	err = lo.Reduce[client.Object, error]([]client.Object{
+		hSvc,
+		svc,
+		dsCloneSet,
+	}, func(errs error, o client.Object, _ int) error {
+		err := ctx.CreateOwned(o)
+		return multierr.Append(errs, util.Ignore(apierrors.IsAlreadyExists, err))
+	}, nil)
+	if err != nil {
+		return errors.Wrap(err, "create")
+	}
 	return nil
 }
