@@ -24,6 +24,10 @@ func GetNamespacedName(obj client.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 }
 
+func GetObjName(obj client.Object) string {
+	return obj.GetName()
+}
+
 func IsDelete(obj client.Object) bool {
 	return obj != nil && !obj.GetDeletionTimestamp().IsZero()
 }

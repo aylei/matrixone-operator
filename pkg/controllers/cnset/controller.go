@@ -36,7 +36,7 @@ var _ recon.Actor[*v1alpha1.CNSet] = &CNSetActor{}
 func (c *CNSetActor) Observe(ctx *recon.Context[*v1alpha1.CNSet]) (recon.Action[*v1alpha1.CNSet], error) {
 	cn := ctx.Obj
 
-	cloneSet := &kruise.CloneSet{}
+	cloneSet := c.cloneSet
 	err, foundCloneSet := util.IsFound(ctx.Get(
 		client.ObjectKey{Namespace: cn.Namespace, Name: getCNSetName(cn)}, cloneSet))
 	if err != nil {

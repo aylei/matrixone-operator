@@ -11,20 +11,15 @@ type DNSetSpec struct {
 	// node storage will be used if not specified
 	// +optional
 	CacheVolume *Volume `json:"cacheVolume,omitempty"`
+
+	// SharedStorage is an external shared storage shared by all DNSet instances
+	// +required
+	SharedStorage SharedStorageProvider `json:"sharedStorage"`
 }
 
 // TODO: figure out what status should be exposed
 type DNSetStatus struct {
 	ConditionalStatus `json:",inline"`
-
-	AvailableStores []DNStore `json:"availableStores,omitempty"`
-	FailedStores    []DNStore `json:"failedStores,omitempty"`
-}
-
-type DNStore struct {
-	PodName      string `json:"podName,omitempty"`
-	Phase        string `json:"phase,omitempty"`
-	LastRevision string `json:"lastTransitionTime,omitempty"`
 }
 
 type DNSetDeps struct {

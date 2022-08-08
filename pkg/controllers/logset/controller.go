@@ -164,6 +164,7 @@ func (r *WithResources) Update(ctx *recon.Context[*v1alpha1.LogSet]) error {
 func (r *LogSetActor) Finalize(ctx *recon.Context[*v1alpha1.LogSet]) (bool, error) {
 	ls := ctx.Obj
 	var errs error
+
 	// subresources should be deleted by owner reference, simply wait the deletion complete
 	svcExist, err := ctx.Exist(client.ObjectKey{Namespace: ls.Namespace, Name: headlessSvcName(ls)}, &corev1.Service{})
 	errs = multierr.Append(errs, err)

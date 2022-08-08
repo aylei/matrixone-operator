@@ -18,8 +18,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// MatrixoneClusterSpec defines the desired state of MatrixoneCluster
-type MatrixoneClusterSpec struct {
+// MatrixOneClusterSpec defines the desired state of MatrixOneCluster
+type MatrixOneClusterSpec struct {
 	// CN is the default CN pod set of this Cluster
 	CN CNSetSpec `json:"cn"`
 	// DN is the default DN pod set of this Cluster
@@ -42,8 +42,8 @@ type MatrixoneClusterSpec struct {
 	ImageRepository *string `json:"imageRepository,omitempty"`
 }
 
-// MatrixoneClusterStatus defines the observed state of MatrixoneCluster
-type MatrixoneClusterStatus struct {
+// MatrixOneClusterStatus defines the observed state of MatrixOneCluster
+type MatrixOneClusterStatus struct {
 	ConditionalStatus `json:",inline"`
 	// CN is the CN set status
 	CN *CNSetStatus `json:"cn,omitempty"`
@@ -55,26 +55,28 @@ type MatrixoneClusterStatus struct {
 
 // +kubebuilder:object:root=true
 
-// A MatrixoneCluster is a resource that represents a MatrixOne Cluster
+// A MatrixOneCluster is a resource that represents a MatrixOne Cluster
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=mo
-type MatrixoneCluster struct {
+type MatrixOneCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MatrixoneClusterSpec   `json:"spec,omitempty"`
-	Status MatrixoneClusterStatus `json:"status,omitempty"`
+	Spec   MatrixOneClusterSpec   `json:"spec,omitempty"`
+	Status MatrixOneClusterStatus `json:"status,omitempty"`
 }
+
+type MatrixOneCommonSpec struct{}
 
 //+kubebuilder:object:root=true
 
-// MatrixoneClusterList contains a list of MatrixoneCluster
-type MatrixoneClusterList struct {
+// MatrixOneClusterList contains a list of MatrixOneCluster
+type MatrixOneClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MatrixoneCluster `json:"items"`
+	Items           []MatrixOneCluster `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&MatrixoneCluster{}, &MatrixoneClusterList{})
+	SchemeBuilder.Register(&MatrixOneCluster{}, &MatrixOneClusterList{})
 }

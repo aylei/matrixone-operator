@@ -59,6 +59,11 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 
 }
 
+func buildSvc(set *v1alpha1.DNSet) *corev1.Service {
+	svc := &corev1.Service{}
+	return svc
+}
+
 // buildDNSet return kruise CloneSet as dn resource
 func buildDNSet(dn *v1alpha1.DNSet, hSvc *corev1.Service) *kruise.CloneSet {
 	dnCloneSet := &kruise.CloneSet{
