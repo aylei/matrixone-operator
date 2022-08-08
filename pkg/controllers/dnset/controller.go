@@ -26,43 +26,45 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type DNSetActor struct {
+type Controller struct {
 	targetNamespacedName types.NamespacedName
 	cloneSet             *kruise.CloneSet
+	service              *corev1.Service
+	hService             *corev1.Service
 }
 
-var _ recon.Actor[*v1alpha1.DNSet] = &DNSetActor{}
+var _ recon.Actor[*v1alpha1.DNSet] = &Controller{}
 
-func (d *DNSetActor) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[*v1alpha1.DNSet], error) {
-	dn := ctx.Obj
-
-	cs := &kruise.CloneSet{}
-	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, cs))
+func (c *Controller) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[*v1alpha1.DNSet], error) {
+	cloneSet := c.cloneSet
+	err, foundCs := util.IsFound(ctx.Get(c.targetNamespacedName, cloneSet))
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service cloneset")
 	}
 
 	if !foundCs {
-		return d.Create, nil
+		return c.Create, nil
 	}
 	return nil, nil
 }
 
-func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error) {
+func (c *Controller) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error) {
 	dn := ctx.Obj
 	var errs error
 
-	svcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetHeadlessSvcName(dn)}, &corev1.Service{})
+	svcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: dn.Name}, c.service)
+	err = multierr.Append(errs, err)
+	hSvcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetHeadlessSvcName(dn)}, c.hService)
 	errs = multierr.Append(errs, err)
-	dnSetExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, &kruise.CloneSet{})
+	dnSetExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, c.cloneSet)
 	errs = multierr.Append(errs, err)
 
-	res := !(svcExit) && (!dnSetExit)
+	res := !hSvcExit && !dnSetExit && !svcExit
 
 	return res, nil
 }
 
-func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
+func (c *Controller) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 
 	return nil
 }

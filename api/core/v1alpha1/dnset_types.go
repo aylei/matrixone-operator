@@ -1,12 +1,23 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type DNSetSpec struct {
 	PodSet `json:",inline"`
 
+	// ConfigMap is reference to a key in a config map
+	// +optional
+	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
+
+	// ServiceType is the service type of dn service
+	// +optional
+	// +kubebuilder:default=ClusterIP
+	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
+	ServiceType corev1.Service `json:"serviceType,omitempty"`
+	
 	// CacheVolume is the desired local cache volume for DNSet,
 	// node storage will be used if not specified
 	// +optional

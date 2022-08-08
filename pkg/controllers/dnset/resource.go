@@ -59,8 +59,19 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 
 }
 
-func buildSvc(set *v1alpha1.DNSet) *corev1.Service {
-	svc := &corev1.Service{}
+func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: dn.Namespace,
+			Name:      getDNSetHeadlessSvcName(dn),
+			Labels:    common.SubResourceLabels(dn),
+		},
+
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Selector:  common.SubResourceLabels(dn),
+		},
+	}
 	return svc
 }
 
