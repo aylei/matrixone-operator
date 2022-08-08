@@ -1005,6 +1005,11 @@ func (in *Overlay) DeepCopy() *Overlay {
 func (in *PodSet) DeepCopyInto(out *PodSet) {
 	*out = *in
 	in.MainContainer.DeepCopyInto(&out.MainContainer)
+	if in.Replicas != nil {
+		in, out := &in.Replicas, &out.Replicas
+		*out = new(int32)
+		**out = **in
+	}
 	if in.TopologyEvenSpread != nil {
 		in, out := &in.TopologyEvenSpread, &out.TopologyEvenSpread
 		*out = make([]string, len(*in))

@@ -107,7 +107,7 @@ func buildConfigMap(ls *v1alpha1.LogSet) (*corev1.ConfigMap, error) {
 func gossipSeeds(ls *v1alpha1.LogSet) string {
 	// TODO: consider hole in asts ordinals
 	sb := strings.Builder{}
-	for i := int32(0); i < ls.Spec.Replicas; i++ {
+	for i := int32(0); i < *ls.Spec.Replicas; i++ {
 		if i != 0 {
 			sb.WriteRune(';')
 		}
