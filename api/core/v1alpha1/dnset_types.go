@@ -6,6 +6,13 @@ import (
 )
 
 type DNSetSpec struct {
+	DNSetBasic `json:",inline"`
+
+	// +optional
+	Overlay *Overlay `json:"overlay,omitempty"`
+}
+
+type DNSetBasic struct {
 	PodSet `json:",inline"`
 
 	// ConfigMap is reference to a key in a config map

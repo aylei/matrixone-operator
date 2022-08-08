@@ -6,6 +6,13 @@ import (
 )
 
 type CNSetSpec struct {
+	CNSetBasic `json:",inline"`
+
+	// +optional
+	Overlay *Overlay `json:"overlay,omitempty"`
+}
+
+type CNSetBasic struct {
 	PodSet `json:",inline"`
 
 	// ConfigMap is reference to a key in a config map
