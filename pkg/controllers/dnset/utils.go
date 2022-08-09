@@ -14,12 +14,3 @@
 
 package dnset
 
-import "github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
-
-func getDNSetName(ds *v1alpha1.DNSet) string {
-	return ds.Name
-}
-
-func getDNSetHeadlessSvcName(ds *v1alpha1.DNSet) string {
-	return ds.Name + "-headless"
-}

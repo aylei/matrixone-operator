@@ -39,3 +39,23 @@ func IsServiceReady(svc *corev1.Service) bool {
 
 	return true
 }
+
+func GetHeadlessSvcName[T client.Object](obj T) string {
+	return obj.GetName() + "-headless"
+}
+
+func GetSvcName[T client.Object](obj T) string {
+	return obj.GetName() + "-discovery"
+}
+
+func GetConfigName[T client.Object](obj T) string {
+	return obj.GetName() + "-config"
+}
+
+func GetName[T client.Object](obj T) string {
+	return obj.GetName()
+}
+
+func GetNamespace[T client.Object](obj T) string {
+	return obj.GetNamespace()
+}

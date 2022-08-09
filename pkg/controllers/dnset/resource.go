@@ -17,6 +17,7 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,7 +36,6 @@ const (
 	dataDir            = "/store/dn"
 	dnUUID             = ""
 	dnTxnBackend       = "MEM"
-	configFile         = "config.toml"
 	listenAddress      = ""
 	serviceAddress     = ""
 	dataVolume         = "data"
@@ -50,7 +50,7 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      getDNSetHeadlessSvcName(dn),
+			Name:      utils.GetNamespace(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 
@@ -69,7 +69,7 @@ func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      getDNSetHeadlessSvcName(dn),
+			Name:      utils.GetHeadlessSvcName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 
@@ -87,7 +87,7 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 	dnCloneSet := &kruise.CloneSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      getDNSetName(dn),
+			Name:      dn.Name,
 		},
 		Spec: kruise.CloneSetSpec{
 			Replicas: nil,
@@ -127,6 +127,7 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 
 // buildDNSetConfigMap return dn set configmap
 func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
+	configName := utils.GetConfigName(dn)
 
 	dsCfg := dn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
@@ -141,11 +142,11 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      configFile,
+			Name:      configName,
 			Labels:    common.SubResourceLabels(dn),
 		},
 		Data: map[string]string{
-			configFile: s,
+			configName: s,
 		},
 	}
 	return configMap, nil

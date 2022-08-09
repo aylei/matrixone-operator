@@ -17,6 +17,7 @@ package cnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,7 +53,7 @@ func buildCNSet(cn *v1alpha1.DNSet) *kruise.CloneSet {
 }
 
 func buildCNSetCOnfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
-	configMapName := cn.Name + "-config"
+	configMapName := utils.GetConfigName(cn)
 	dsCfg := cn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/dnservice/cfg.go
 	if dsCfg == nil {
