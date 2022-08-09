@@ -295,3 +295,31 @@ type CloneSetCommon struct {
 	// +optional
 	Lifecycle *appspub.Lifecycle `json:"lifecycle,omitempty"`
 }
+
+type LogConfig struct {
+	// Level log level: debug,info,warning
+	// +optional
+	// +kubebuilder:default="info"
+	Level string `json:"level,omitempty"`
+
+	// Format log format method: json, console
+	// +optional
+	// +kubebuilder:default="json"
+	Format string `json:"format,omitempty"`
+
+	// MaxSize log file max size
+	// +optional
+	// +kubebuilder:default=512
+	MaxSize int `json:"maxSize,omitempty"`
+}
+
+type FileServiceConfig struct {
+	Name         string                 `json:"name,omitempty"`
+	Backend      string                 `json:"backend,omitempty"`
+	LocalDisk    *LocalDisConfig        `json:",inline"`
+	ShardStorage *SharedStorageProvider `json:"sharedStorage,omitempty"`
+}
+
+type LocalDisConfig struct {
+	DataDir string `json:"data-dir,omitempty"`
+}

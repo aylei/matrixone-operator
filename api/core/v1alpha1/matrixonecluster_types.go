@@ -22,6 +22,9 @@ import (
 // Note that MatrixOneCluster does not support specify overlay for underlying sets directly due to the size limitation
 // of kubernetes apiserver
 type MatrixOneClusterSpec struct {
+	// Global contains a shared config for components
+	Global MatrixOneGlobalSpec `json:"global,omitempty"`
+
 	// TP is the default CN pod set that accepts client connections and execute queries
 	// +required
 	TP CNSetBasic `json:"tp"`
@@ -32,17 +35,21 @@ type MatrixOneClusterSpec struct {
 
 	// DN is the default DN pod set of this Cluster
 	DN DNSetBasic `json:"dn"`
+
 	// LogService is the default LogService pod set of this cluster
 	LogService LogSetBasic `json:"logService"`
+
 	// Version is the version of the cluster, which translated
 	// to the docker image tag used for each component.
 	// default to the recommended version of the operator
 	// +optional
 	Version *string `json:"version"`
+
 	// WebUIEnabled indicates whether deploy the MO web-ui,
 	// default to true.
 	// +optional
 	WebUIEnabled *bool `json:"webUIEnabled,omitempty"`
+
 	// ImageRepository allows user to override the default image
 	// repository in order to use a docker registry proxy or private
 	// registry.
@@ -74,7 +81,11 @@ type MatrixOneCluster struct {
 	Status MatrixOneClusterStatus `json:"status,omitempty"`
 }
 
-type MatrixOneCommonSpec struct{}
+// MatrixOneGlobalSpec Global config for MatrixOne, like log etc.
+type MatrixOneGlobalSpec struct {
+	LogConfig `json:",inline"`
+	Image     string `json:"image,omitempty"`
+}
 
 //+kubebuilder:object:root=true
 

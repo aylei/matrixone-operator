@@ -27,10 +27,7 @@ import (
 
 const (
 	defaultPodReplicas = 1
-	logLevel           = "debug"
 	serviceType        = "DN"
-	logFormatType      = "json"
-	logMaxSize         = 512
 	localFSName        = "local"
 	localFSBackend     = "DISK"
 	dataDir            = "/store/dn"
@@ -65,11 +62,12 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 
 }
 
+// buildSvc build dn pod service
 func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      utils.GetHeadlessSvcName(dn),
+			Name:      utils.GetSvcName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 
@@ -90,7 +88,6 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 			Name:      dn.Name,
 		},
 		Spec: kruise.CloneSetSpec{
-			Replicas: nil,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: common.SubResourceLabels(dn),
 			},
@@ -126,13 +123,13 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 }
 
 // buildDNSetConfigMap return dn set configmap
-func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
+func buildDNSetConfigMap(dn *v1alpha1.DNSet, global *v1alpha1.MatrixOneGlobalSpec) (*corev1.ConfigMap, error) {
 	configName := utils.GetConfigName(dn)
 
 	dsCfg := dn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
 	if dsCfg == nil {
-		dsCfg = getDNSeriviceConfig(dn)
+		dsCfg = getDNServiceConfig(dn, global)
 	}
 	s, err := dsCfg.ToString()
 	if err != nil {
@@ -221,21 +218,17 @@ func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
 	return []corev1.ServicePort{}
 }
 
-func getDNSeriviceConfig(dn *v1alpha1.DNSet) *v1alpha1.TomlConfig {
+func getDNServiceConfig(dn *v1alpha1.DNSet, global *v1alpha1.MatrixOneGlobalSpec) *v1alpha1.TomlConfig {
 	dsCfg := v1alpha1.NewTomlConfig(map[string]interface{}{
 		"service-type": serviceType,
-		"log": map[string]interface{}{
-			"level":    logLevel,
-			"format":   logFormatType,
-			"max-size": logMaxSize,
-		},
+		"log":          utils.GetLogConfig(global),
 		// fileservice config for local cache
 		"fileservice": map[string]interface{}{
 			"name":     localFSName,
 			"backend":  localFSBackend,
 			"data-dir": dataDir,
 		},
-		// TODO: config for remote storage
+		// TODO: config for object storage
 		//"file-service.object": map[string]interface{}{
 		//	"name":    s3FSName,
 		//	"backend": s3BackendType,

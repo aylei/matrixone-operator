@@ -15,6 +15,7 @@
 package utils
 
 import (
+	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,4 +59,12 @@ func GetName[T client.Object](obj T) string {
 
 func GetNamespace[T client.Object](obj T) string {
 	return obj.GetNamespace()
+}
+
+func GetLogConfig(global *v1alpha1.MatrixOneGlobalSpec) map[string]interface{} {
+	return map[string]interface{}{
+		"level":    global.Level,
+		"format":   global.Format,
+		"max-size": global.MaxSize,
+	}
 }
