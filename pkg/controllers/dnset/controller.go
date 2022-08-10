@@ -43,10 +43,12 @@ func (d *DNSetActor) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[
 
 	svc := &corev1.Service{}
 	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, svc))
+	if err != nil {
+		return nil, errors.Wrap(err, "get dn service discovery service")
+	}
 
 	cloneSet := &kruise.CloneSet{}
 	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, cloneSet))
-
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service cloneset")
 	}

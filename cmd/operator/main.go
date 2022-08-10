@@ -16,9 +16,13 @@ package main
 
 import (
 	"flag"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/cnset"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/dnset"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/matrixone"
 	"os"
 
+	kruisev1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruisev1 "github.com/openkruise/kruise-api/apps/v1beta1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -47,6 +51,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(kruisev1.AddToScheme(scheme))
+	utilruntime.Must(kruisev1alpha1.AddToScheme(scheme))
 }
 
 func main() {
@@ -80,7 +85,11 @@ func main() {
 	}
 
 	//+kubebuilder:scaffold:builder
-	matrixoneActor := &matrixone.MatrixOneActor{}
+	matrixoneActor := &matrixone.MatrixOneActor{
+		LogSet: logset.LogSetActor{},
+		DNSet:  dnset.DNSetActor{},
+		CNSet:  cnset.CNSetActor{},
+	}
 	err = recon.Setup[*v1alpha1.MatrixOneCluster](&v1alpha1.MatrixOneCluster{}, "matrixone", mgr, matrixoneActor)
 	if err != nil {
 		setupLog.Error(err, "unable to set up matrixone controller")
