@@ -16,6 +16,21 @@ package matrixone
 
 import "github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 
-func buildMatrixOneCluster(mo *v1alpha1.MatrixOneCluster) error {
+func buildMatrixOneCluster(
+	mo *v1alpha1.MatrixOneCluster,
+	logSet *v1alpha1.LogSet,
+	dn *v1alpha1.DNSet,
+	cn *v1alpha1.CNSet) error {
+	if err := syncCNBasic(mo, cn); err != nil {
+		return err
+	}
+
+	if err := syncDNBasic(mo, dn); err != nil {
+		return err
+	}
+
+	if err := syncLogServiceBasic(mo, logSet); err != nil {
+		return err
+	}
 	return nil
 }

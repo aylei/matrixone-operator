@@ -87,8 +87,10 @@ func (m *MatrixOneActor) Observe(
 func (m *MatrixOneActor) Create(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) error {
 	mo := ctx.Obj
 
-	err := buildMatrixOneCluster(mo)
-	if err != nil {
+	logSet := &v1alpha1.LogSet{}
+	dnSet := &v1alpha1.DNSet{}
+	cnSet := &v1alpha1.CNSet{}
+	if err := buildMatrixOneCluster(mo, logSet, dnSet, cnSet); err != nil {
 		return err
 	}
 

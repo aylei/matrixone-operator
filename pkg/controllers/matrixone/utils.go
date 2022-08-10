@@ -14,8 +14,16 @@
 
 package matrixone
 
-func syncDNBasic() {}
+import "github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 
-func syncCNBasic() {}
+func syncDNBasic(mo *v1alpha1.MatrixOneCluster, dn *v1alpha1.DNSet) error {
+	return nil
+}
 
-func syncLogServiceBasic() {}
+func syncCNBasic(mo *v1alpha1.MatrixOneCluster, cn *v1alpha1.CNSet) error {
+	return nil
+}
+
+func syncLogServiceBasic(mo *v1alpha1.MatrixOneCluster, logService *v1alpha1.LogSet) error {
+	return nil
+}
