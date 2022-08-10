@@ -16,9 +16,9 @@ package main
 
 import (
 	"flag"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/matrixone"
 	"os"
 
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	kruisev1 "github.com/openkruise/kruise-api/apps/v1beta1"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -79,21 +79,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// if err = (&matrixone.MatrixoneClusterReconciler{
-	// 	Client: mgr.GetClient(),
-	// 	Scheme: mgr.GetScheme(),
-	// }).SetupWithManager(mgr); err != nil {
-	// 	setupLog.Error(err, "unable to create controller", "controller", "MatrixoneCluster")
-	// 	os.Exit(1)
-	// }
-	//if err = (matrixone.NewMatrixoneReconciler(mgr)).SetupWithManager(mgr); err != nil {
-	//	setupLog.Error(err, "unable to create controller", "controller", "Matrixone")
-	//	os.Exit(1)
-	//}
 	//+kubebuilder:scaffold:builder
-	logsetActor := &logset.LogSetActor{}
-	if err := recon.Setup[*v1alpha1.LogSet](&v1alpha1.LogSet{}, "logset", mgr, logsetActor); err != nil {
-		setupLog.Error(err, "unable to set up logset controller")
+	matrixoneActor := &matrixone.MatrixOneActor{}
+	err = recon.Setup[*v1alpha1.MatrixOneCluster](&v1alpha1.MatrixOneCluster{}, "matrixone", mgr, matrixoneActor)
+	if err != nil {
+		setupLog.Error(err, "unable to set up matrixone controller")
 		os.Exit(1)
 	}
 

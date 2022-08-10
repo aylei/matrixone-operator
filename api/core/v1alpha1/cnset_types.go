@@ -23,7 +23,7 @@ type CNSetBasic struct {
 	// +optional
 	// +kubebuilder:default=ClusterIP
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
-	ServiceType corev1.Service `json:"serviceType,omitempty"`
+	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
 
 	// CacheVolume is the desired local cache volume for CNSet,
 	// node storage will be used if not specified

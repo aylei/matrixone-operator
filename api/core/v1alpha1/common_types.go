@@ -36,7 +36,7 @@ type PodSet struct {
 
 	// TopologyEvenSpread specifies what topology domains the Pods in set should be
 	// evenly spread in.
-	// This will overridden by .overlay.TopologySpreadConstraints
+	// This will override by .overlay.TopologySpreadConstraints
 	// +optional
 	TopologyEvenSpread []string `json:"topologySpread,omitempty"`
 
@@ -254,7 +254,7 @@ type CloneSetUpdateStrategy struct {
 	// Paused indicates that the CloneSet is paused.
 	// Default value is false
 	// +optional
-	// +kubebuilder:default="false"
+	// +kubebuilder:default=false
 	Paused bool `json:"paused,omitempty"`
 
 	// Priorities are the rules for calculating the priority of updating pods.

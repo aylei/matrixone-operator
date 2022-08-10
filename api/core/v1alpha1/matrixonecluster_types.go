@@ -22,9 +22,6 @@ import (
 // Note that MatrixOneCluster does not support specify overlay for underlying sets directly due to the size limitation
 // of kubernetes apiserver
 type MatrixOneClusterSpec struct {
-	// Global contains a shared config for components
-	Global MatrixOneGlobalSpec `json:"global,omitempty"`
-
 	// TP is the default CN pod set that accepts client connections and execute queries
 	// +required
 	TP CNSetBasic `json:"tp"`
@@ -82,10 +79,10 @@ type MatrixOneCluster struct {
 }
 
 // MatrixOneGlobalSpec Global config for MatrixOne, like log etc.
-type MatrixOneGlobalSpec struct {
-	LogConfig `json:",inline"`
-	Image     string `json:"image,omitempty"`
-}
+//type MatrixOneGlobalSpec struct {
+//	LogConfig `json:",inline"`
+//	Image     string `json:"image,omitempty"`
+//}
 
 //+kubebuilder:object:root=true
 

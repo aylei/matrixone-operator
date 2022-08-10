@@ -13,3 +13,9 @@
 // limitations under the License.
 
 package matrixone
+
+func syncDNBasic() {}
+
+func syncCNBasic() {}
+
+func syncLogServiceBasic() {}
