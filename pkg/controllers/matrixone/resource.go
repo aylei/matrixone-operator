@@ -13,3 +13,9 @@
 // limitations under the License.
 
 package matrixone
+
+import "github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+
+func buildMatrixOneCluster(mo *v1alpha1.MatrixOneCluster) error {
+	return nil
+}
