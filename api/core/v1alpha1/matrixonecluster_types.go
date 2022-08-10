@@ -24,11 +24,7 @@ import (
 type MatrixOneClusterSpec struct {
 	// TP is the default CN pod set that accepts client connections and execute queries
 	// +required
-	TP CNSetBasic `json:"tp"`
-
-	// AP is an optional CN pod set that accept MPP sub-plans to accelerate sql queries
-	// +optionals
-	AP *CNSetBasic `json:"ap,omitempty"`
+	CN CNSetBasic `json:"cn"`
 
 	// DN is the default DN pod set of this Cluster
 	DN DNSetBasic `json:"dn"`

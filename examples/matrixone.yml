@@ -1,0 +1,11 @@
+apiVersion: core.matrixorigin.io/v1alpha1
+kind: MatrixOneCluster
+metadata:
+  name: mo
+spec:
+  version:
+  cn:
+  dn:
+  logService:
+  webUIEnabled:
+  imageRepository:
