@@ -32,7 +32,7 @@ type PodSet struct {
 	MainContainer `json:",inline"`
 
 	// Replicas is the desired number of pods of this set
-	Replicas *int32 `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 
 	// TopologyEvenSpread specifies what topology domains the Pods in set should be
 	// evenly spread in.
@@ -311,15 +311,4 @@ type LogConfig struct {
 	// +optional
 	// +kubebuilder:default=512
 	MaxSize int `json:"maxSize,omitempty"`
-}
-
-type FileServiceConfig struct {
-	Name         string                 `json:"name,omitempty"`
-	Backend      string                 `json:"backend,omitempty"`
-	LocalDisk    *LocalDisConfig        `json:",inline"`
-	ShardStorage *SharedStorageProvider `json:"sharedStorage,omitempty"`
-}
-
-type LocalDisConfig struct {
-	DataDir string `json:"data-dir,omitempty"`
 }

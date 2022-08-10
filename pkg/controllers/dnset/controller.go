@@ -17,6 +17,7 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -64,11 +65,13 @@ func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 	err = multierr.Append(errs, err)
 
 	hSvcExit, err := ctx.Exist(client.ObjectKey{
-		Namespace: dn.Namespace, Name: getDNSetHeadlessSvcName(dn)},
+		Namespace: dn.Namespace, Name: utils.GetHeadlessSvcName(dn)},
 		&corev1.Service{})
 	errs = multierr.Append(errs, err)
 
-	dnSetExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: getDNSetName(dn)}, &kruise.CloneSet{})
+	dnSetExit, err := ctx.Exist(client.ObjectKey{
+		Namespace: dn.Namespace, Name: utils.GetHeadlessSvcName(dn)},
+		&kruise.CloneSet{})
 	errs = multierr.Append(errs, err)
 
 	res := !hSvcExit && !dnSetExit && !svcExit

@@ -25,23 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	defaultPodReplicas = 1
-	serviceType        = "DN"
-	localFSName        = "local"
-	localFSBackend     = "DISK"
-	dataDir            = "/store/dn"
-	dnUUID             = ""
-	dnTxnBackend       = "MEM"
-	listenAddress      = ""
-	serviceAddress     = ""
-	dataVolume         = "data"
-	dataPath           = "/var/lib/dnservice"
-	configVolume       = "config"
-	configPath         = "/etc/dnservice"
-	PodNameEnvKey      = "POD_NAME"
-)
-
 // buildHeadlessSvc build the initial headless service object for the given dnset
 func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
@@ -99,20 +82,8 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 					Annotations: map[string]string{},
 				},
 			},
-			ScaleStrategy: kruise.CloneSetScaleStrategy{
-				PodsToDelete:   dn.Spec.ScaleStrategy.PodsToDelete,
-				MaxUnavailable: dn.Spec.ScaleStrategy.MaxUnavailable,
-			},
-			UpdateStrategy: kruise.CloneSetUpdateStrategy{
-				Type:                  dn.Spec.UpdateStrategy.Type,
-				Partition:             dn.Spec.UpdateStrategy.Partition,
-				MaxUnavailable:        dn.Spec.UpdateStrategy.MaxUnavailable,
-				MaxSurge:              dn.Spec.UpdateStrategy.MaxSurge,
-				Paused:                dn.Spec.UpdateStrategy.Paused,
-				PriorityStrategy:      dn.Spec.UpdateStrategy.PriorityStrategy,
-				ScatterStrategy:       dn.Spec.UpdateStrategy.ScatterStrategy,
-				InPlaceUpdateStrategy: dn.Spec.UpdateStrategy.InPlaceUpdateStrategy,
-			},
+			ScaleStrategy:        getScaleStrategyConfig(dn),
+			UpdateStrategy:       getUpdateStrategyConfig(dn),
 			RevisionHistoryLimit: dn.Spec.RevisionHistoryLimit,
 			MinReadySeconds:      dn.Spec.MinReadySeconds,
 			Lifecycle:            dn.Spec.Lifecycle,
@@ -123,13 +94,13 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 }
 
 // buildDNSetConfigMap return dn set configmap
-func buildDNSetConfigMap(dn *v1alpha1.DNSet, global *v1alpha1.MatrixOneGlobalSpec) (*corev1.ConfigMap, error) {
+func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	configName := utils.GetConfigName(dn)
 
 	dsCfg := dn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
 	if dsCfg == nil {
-		dsCfg = getDNServiceConfig(dn, global)
+		dsCfg = getDNServiceConfig(dn)
 	}
 	s, err := dsCfg.ToString()
 	if err != nil {
@@ -170,13 +141,8 @@ func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
 }
 
 func syncReplicas(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
-	if ds.Spec.Replicas != nil {
-		ds.Spec.Replicas = cs.Spec.Replicas
-	}
+	cs.Spec.Replicas = &ds.Spec.Replicas
 
-	// default pod replicas 1
-	d := int32(defaultPodReplicas)
-	ds.Spec.Replicas = &d
 }
 
 func syncPodMeta(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
@@ -212,41 +178,4 @@ func syncPodSpec(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
 
 	ds.Spec.Overlay.OverlayPodSpec(&podSpec)
 	cs.Spec.Template.Spec = podSpec
-}
-
-func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
-	return []corev1.ServicePort{}
-}
-
-func getDNServiceConfig(dn *v1alpha1.DNSet, global *v1alpha1.MatrixOneGlobalSpec) *v1alpha1.TomlConfig {
-	dsCfg := v1alpha1.NewTomlConfig(map[string]interface{}{
-		"service-type": serviceType,
-		"log":          utils.GetLogConfig(global),
-		// fileservice config for local cache
-		"fileservice": map[string]interface{}{
-			"name":     localFSName,
-			"backend":  localFSBackend,
-			"data-dir": dataDir,
-		},
-		// TODO: config for object storage
-		//"file-service.object": map[string]interface{}{
-		//	"name":    s3FSName,
-		//	"backend": s3BackendType,
-		//	"dat-dir": s3BucketPath,
-		//},
-		"dn": map[string]interface{}{
-			"uuid":            dnUUID,
-			"listen-address":  listenAddress,
-			"service-address": serviceAddress,
-		},
-		"dn.Txn.Storage": map[string]interface{}{
-			"backend": dnTxnBackend,
-		},
-		"dn.HAKeeper.hakeeper-client": map[string]interface{}{
-			// TODO: config global Hakeeper addresses, It may get from logset
-			"service-addresses": []string{},
-		},
-	})
-
-	return dsCfg
 }

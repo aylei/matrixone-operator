@@ -85,7 +85,7 @@ func (r *LogSetActor) Observe(ctx *recon.Context[*v1alpha1.LogSet]) (recon.Actio
 	switch {
 	case len(ls.Status.FailedStores) > 0:
 		return r.Repair, nil
-	case ls.Spec.Replicas != sts.Spec.Replicas:
+	case &ls.Spec.Replicas != sts.Spec.Replicas:
 		return r.with(sts).Scale, nil
 	}
 	origin := sts.DeepCopy()

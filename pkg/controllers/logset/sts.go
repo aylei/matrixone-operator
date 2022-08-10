@@ -19,21 +19,14 @@ const (
 	configVolume = "config"
 	configPath   = "/etc/logservice"
 
-	defaultPodReplicas = 3
-	bootstrapVolume    = "bootstrap"
-	bootstrapPath      = "/etc/bootstrap"
-	PodNameEnvKey      = "POD_NAME"
+	bootstrapVolume = "bootstrap"
+	bootstrapPath   = "/etc/bootstrap"
+	PodNameEnvKey   = "POD_NAME"
 )
 
 // syncReplicas controls the real replicas field of the logset pods
 func syncReplicas(ls *v1alpha1.LogSet, sts *kruisev1.StatefulSet) {
-	if ls.Spec.Replicas != nil {
-		sts.Spec.Replicas = ls.Spec.Replicas
-	}
-
-	// default logSet 3
-	d := int32(defaultPodReplicas)
-	sts.Spec.Replicas = &d
+	sts.Spec.Replicas = &ls.Spec.Replicas
 }
 
 // syncPodMeta controls the metadata of the underlying logset pods, update meta might not need to trigger rolling-update

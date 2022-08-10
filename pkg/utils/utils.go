@@ -15,10 +15,15 @@
 package utils
 
 import (
-	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	svcSuffix    = "-discovery"
+	hSvcSuffix   = "-headless"
+	configSuffix = "-config"
 )
 
 func GetNamespacedName(obj client.Object) types.NamespacedName {
@@ -42,15 +47,15 @@ func IsServiceReady(svc *corev1.Service) bool {
 }
 
 func GetHeadlessSvcName[T client.Object](obj T) string {
-	return obj.GetName() + "-headless"
+	return obj.GetName() + hSvcSuffix
 }
 
 func GetSvcName[T client.Object](obj T) string {
-	return obj.GetName() + "-discovery"
+	return obj.GetName() + svcSuffix
 }
 
 func GetConfigName[T client.Object](obj T) string {
-	return obj.GetName() + "-config"
+	return obj.GetName() + configSuffix
 }
 
 func GetName[T client.Object](obj T) string {
@@ -59,12 +64,4 @@ func GetName[T client.Object](obj T) string {
 
 func GetNamespace[T client.Object](obj T) string {
 	return obj.GetNamespace()
-}
-
-func GetLogConfig(global *v1alpha1.MatrixOneGlobalSpec) map[string]interface{} {
-	return map[string]interface{}{
-		"level":    global.Level,
-		"format":   global.Format,
-		"max-size": global.MaxSize,
-	}
 }

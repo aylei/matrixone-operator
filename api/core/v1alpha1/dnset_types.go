@@ -15,11 +15,8 @@ type DNSetSpec struct {
 }
 
 type DNSetBasic struct {
-	PodSet `json:",inline"`
-
-	// ConfigMap is reference to a key in a config map
-	// +optional
-	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
+	PodSet    `json:",inline"`
+	LogConfig `json:",inline"`
 
 	// ServiceType is the service type of dn service
 	// +optional
@@ -31,10 +28,6 @@ type DNSetBasic struct {
 	// node storage will be used if not specified
 	// +optional
 	CacheVolume *Volume `json:"cacheVolume,omitempty"`
-
-	// SharedStorage is an external shared storage shared by all DNSet instances
-	// +required
-	SharedStorage SharedStorageProvider `json:"sharedStorage"`
 }
 
 // TODO: figure out what status should be exposed
