@@ -15,7 +15,17 @@ spec:
     singular: cnset
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.image
+      name: Image
+      type: string
+    - jsonPath: .spec.replicas
+      name: Replicas
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: A CNSet is a resource that represents a set of MO's CN instances
@@ -71,24 +81,6 @@ spec:
               config:
                 description: Config is the raw config for pods
                 type: string
-              configmap:
-                description: ConfigMap is reference to a key in a config map
-                properties:
-                  key:
-                    description: The key to select.
-                    type: string
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                  optional:
-                    description: Specify whether the ConfigMap or its key must be
-                      defined
-                    type: boolean
-                required:
-                - key
-                type: object
-                x-kubernetes-map-type: atomic
               image:
                 description: Image is the docker image of the main container
                 type: string
@@ -96,15 +88,6 @@ spec:
                 description: Overlay allows advanced customization of the pod spec
                   in the set
                 properties:
-                  ImagePullPolicy:
-                    default: IfNotPresent
-                    description: ImagePullPolicy is the pull policy of MatrixOne image.
-                      The default value is the same as the default of Kubernetes.
-                    enum:
-                    - Always
-                    - Never
-                    - IfNotPresent
-                    type: string
                   affinity:
                     description: Affinity is a group of affinity scheduling rules.
                     properties:
@@ -6490,17 +6473,10 @@ spec:
                       to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                     type: object
                 type: object
-              serviceType:
-                default: ClusterIP
-                description: ServiceType is the service type of cn service
-                enum:
-                - ClusterIP
-                - NodePort
-                - LoadBalancer
-                type: string
               topologySpread:
                 description: TopologyEvenSpread specifies what topology domains the
-                  Pods in set should be evenly spread in. This will override by .overlay.TopologySpreadConstraints
+                  Pods in set should be evenly spread in. This will be overridden
+                  by .overlay.TopologySpreadConstraints
                 items:
                   type: string
                 type: array

@@ -9,8 +9,8 @@ metadata:
 spec:
   group: core.matrixorigin.io
   names:
-    kind: MatrixOneCluster
-    listKind: MatrixOneClusterList
+    kind: MatrixoneCluster
+    listKind: MatrixoneClusterList
     plural: matrixoneclusters
     shortNames:
     - mo
@@ -20,7 +20,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: A MatrixOneCluster is a resource that represents a MatrixOne
+        description: A MatrixoneCluster is a resource that represents a MatrixOne
           Cluster
         properties:
           apiVersion:
@@ -36,7 +36,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: MatrixOneClusterSpec defines the desired state of MatrixOneCluster
+            description: MatrixoneClusterSpec defines the desired state of MatrixoneCluster
               Note that MatrixOneCluster does not support specify overlay for underlying
               sets directly due to the size limitation of kubernetes apiserver
             properties:
@@ -66,24 +66,6 @@ spec:
                   config:
                     description: Config is the raw config for pods
                     type: string
-                  configmap:
-                    description: ConfigMap is reference to a key in a config map
-                    properties:
-                      key:
-                        description: The key to select.
-                        type: string
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                      optional:
-                        description: Specify whether the ConfigMap or its key must
-                          be defined
-                        type: boolean
-                    required:
-                    - key
-                    type: object
-                    x-kubernetes-map-type: atomic
                   image:
                     description: Image is the docker image of the main container
                     type: string
@@ -118,17 +100,9 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
-                  serviceType:
-                    default: ClusterIP
-                    description: ServiceType is the service type of cn service
-                    enum:
-                    - ClusterIP
-                    - NodePort
-                    - LoadBalancer
-                    type: string
                   topologySpread:
                     description: TopologyEvenSpread specifies what topology domains
-                      the Pods in set should be evenly spread in. This will override
+                      the Pods in set should be evenly spread in. This will be overridden
                       by .overlay.TopologySpreadConstraints
                     items:
                       type: string
@@ -161,21 +135,9 @@ spec:
                   config:
                     description: Config is the raw config for pods
                     type: string
-                  format:
-                    default: json
-                    description: 'Format log format method: json, console'
-                    type: string
                   image:
                     description: Image is the docker image of the main container
                     type: string
-                  level:
-                    default: info
-                    description: 'Level log level: debug,info,warning'
-                    type: string
-                  maxSize:
-                    default: 512
-                    description: MaxSize log file max size
-                    type: integer
                   replicas:
                     description: Replicas is the desired number of pods of this set
                     format: int32
@@ -207,17 +169,9 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
-                  serviceType:
-                    default: ClusterIP
-                    description: ServiceType is the service type of dn service
-                    enum:
-                    - ClusterIP
-                    - NodePort
-                    - LoadBalancer
-                    type: string
                   topologySpread:
                     description: TopologyEvenSpread specifies what topology domains
-                      the Pods in set should be evenly spread in. This will override
+                      the Pods in set should be evenly spread in. This will be overridden
                       by .overlay.TopologySpreadConstraints
                     items:
                       type: string
@@ -333,7 +287,7 @@ spec:
                     type: object
                   topologySpread:
                     description: TopologyEvenSpread specifies what topology domains
-                      the Pods in set should be evenly spread in. This will override
+                      the Pods in set should be evenly spread in. This will be overridden
                       by .overlay.TopologySpreadConstraints
                     items:
                       type: string
@@ -389,24 +343,6 @@ spec:
                   config:
                     description: Config is the raw config for pods
                     type: string
-                  configmap:
-                    description: ConfigMap is reference to a key in a config map
-                    properties:
-                      key:
-                        description: The key to select.
-                        type: string
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                      optional:
-                        description: Specify whether the ConfigMap or its key must
-                          be defined
-                        type: boolean
-                    required:
-                    - key
-                    type: object
-                    x-kubernetes-map-type: atomic
                   image:
                     description: Image is the docker image of the main container
                     type: string
@@ -441,17 +377,9 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
-                  serviceType:
-                    default: ClusterIP
-                    description: ServiceType is the service type of cn service
-                    enum:
-                    - ClusterIP
-                    - NodePort
-                    - LoadBalancer
-                    type: string
                   topologySpread:
                     description: TopologyEvenSpread specifies what topology domains
-                      the Pods in set should be evenly spread in. This will override
+                      the Pods in set should be evenly spread in. This will be overridden
                       by .overlay.TopologySpreadConstraints
                     items:
                       type: string
@@ -474,7 +402,7 @@ spec:
             - tp
             type: object
           status:
-            description: MatrixOneClusterStatus defines the observed state of MatrixOneCluster
+            description: MatrixoneClusterStatus defines the observed state of MatrixoneCluster
             properties:
               cn:
                 description: CN is the CN set status
