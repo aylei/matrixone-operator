@@ -22,7 +22,7 @@ import (
 // Note that MatrixOneCluster does not support specify overlay for underlying sets directly due to the size limitation
 // of kubernetes apiserver
 type MatrixOneClusterSpec struct {
-	// TP is the default CN pod set that accepts client connections and execute queries
+	//  CN is the default CN pod set of this Cluster
 	// +required
 	CN CNSetBasic `json:"cn"`
 

@@ -37,7 +37,7 @@ var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &MatrixOneActor{}
 func (m *MatrixOneActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
 	mo := ctx.Obj
 
-	ctx.Log.Info("finalzie logset")
+	ctx.Log.Info("finalzie matrixone")
 
 	objs := []client.Object{&v1alpha1.LogSet{}, &v1alpha1.DNSet{}, &v1alpha1.CNSet{}}
 	for _, obj := range objs {
