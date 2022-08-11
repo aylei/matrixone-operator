@@ -23,21 +23,24 @@ import (
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-type MatrixOneActor struct {
-	DNSet  dnset.DNSetActor
-	LogSet logset.LogSetActor
-	CNSet  cnset.CNSetActor
+type Actor struct {
+	Mgr    manager.Manager
+	LActor *logset.LogSetActor
+	DActor *dnset.DNSetActor
+	CActor *cnset.CNSetActor
 }
 
-var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &MatrixOneActor{}
+var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &Actor{}
 
-func (m *MatrixOneActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
+func (m *Actor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
 	mo := ctx.Obj
 
-	ctx.Log.Info("finalzie matrixone")
+	klog.V(recon.Info).Info("finalize matrixone")
 
 	objs := []client.Object{&v1alpha1.LogSet{}, &v1alpha1.DNSet{}, &v1alpha1.CNSet{}}
 	for _, obj := range objs {
@@ -59,7 +62,7 @@ func (m *MatrixOneActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]
 
 }
 
-func (m *MatrixOneActor) Observe(
+func (m *Actor) Observe(
 	ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (recon.Action[*v1alpha1.MatrixOneCluster], error) {
 	mo := ctx.Obj
 
@@ -84,13 +87,61 @@ func (m *MatrixOneActor) Observe(
 	return nil, nil
 }
 
-func (m *MatrixOneActor) Create(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) error {
+func (m *Actor) Create(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) error {
 	mo := ctx.Obj
-
 	logSet := &v1alpha1.LogSet{}
 	dnSet := &v1alpha1.DNSet{}
 	cnSet := &v1alpha1.CNSet{}
+
+	klog.V(recon.Info).Info("create matrixone cluster...")
+
 	if err := buildMatrixOneCluster(mo, logSet, dnSet, cnSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Actor) Reconcile() error {
+	logSet := &v1alpha1.LogSet{}
+	dnSet := &v1alpha1.DNSet{}
+	cnSet := &v1alpha1.CNSet{}
+	ms := &v1alpha1.MatrixOneCluster{}
+
+	if err := initialDNSet(m.Mgr, dnSet, m.DActor); err != nil {
+		return err
+	}
+	if err := initialCNSet(m.Mgr, cnSet, m.CActor); err != nil {
+		return err
+	}
+	if err := initialLogSet(m.Mgr, logSet, m.LActor); err != nil {
+		return err
+	}
+
+	if err := recon.Setup[*v1alpha1.MatrixOneCluster](ms, "matrixone", m.Mgr, m); err != nil {
+		return err
+	}
+	return nil
+}
+
+func initialDNSet(mgr manager.Manager, dn *v1alpha1.DNSet, actor *dnset.DNSetActor) error {
+	if err := actor.Reconcile(mgr, dn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initialCNSet(mgr manager.Manager, cn *v1alpha1.CNSet, actor *cnset.CNSetActor) error {
+	if err := actor.Reconcile(mgr, cn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initialLogSet(mgr manager.Manager, ls *v1alpha1.LogSet, actor *logset.LogSetActor) error {
+	if err := actor.Reconcile(mgr, ls); err != nil {
 		return err
 	}
 

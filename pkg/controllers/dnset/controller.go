@@ -26,7 +26,9 @@ import (
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type DNSetActor struct{}
@@ -82,6 +84,7 @@ func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 }
 
 func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
+	klog.V(recon.Info).Info("create dn set...")
 	ds := ctx.Obj
 
 	hSvc := buildHeadlessSvc(ds)
@@ -112,5 +115,15 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 	if err != nil {
 		return errors.Wrap(err, "create")
 	}
+
+	return nil
+}
+
+func (d *DNSetActor) Reconcile(mgr manager.Manager, dn *v1alpha1.DNSet) error {
+	err := recon.Setup[*v1alpha1.DNSet](dn, "dn set", mgr, d)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

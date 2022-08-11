@@ -14,11 +14,16 @@
 
 package matrixone
 
-import "github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+import (
+	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
+	"k8s.io/klog/v2"
+)
 
 func syncDNBasic(mo *v1alpha1.MatrixOneCluster, dn *v1alpha1.DNSet) error {
 
-	dn.Name = mo.Name + "-cn"
+	klog.V(recon.Debug).Info("sync DN basic...")
+	dn.Name = mo.Name
 	dn.Namespace = mo.Namespace
 	dn.Spec.DNSetBasic = mo.Spec.DN
 
@@ -27,7 +32,8 @@ func syncDNBasic(mo *v1alpha1.MatrixOneCluster, dn *v1alpha1.DNSet) error {
 
 func syncCNBasic(mo *v1alpha1.MatrixOneCluster, cn *v1alpha1.CNSet) error {
 
-	cn.Name = mo.Name + "-dn"
+	klog.V(recon.Debug).Info("sync CN basic...")
+	cn.Name = mo.Name
 	cn.Namespace = mo.Namespace
 	cn.Spec.CNSetBasic = mo.Spec.CN
 
@@ -36,9 +42,9 @@ func syncCNBasic(mo *v1alpha1.MatrixOneCluster, cn *v1alpha1.CNSet) error {
 
 func syncLogServiceBasic(mo *v1alpha1.MatrixOneCluster, logService *v1alpha1.LogSet) error {
 
-	logService.Name = mo.Name + "-logService"
+	klog.V(recon.Debug).Info("sync logService...")
+	logService.Name = mo.Name
 	logService.Namespace = mo.Namespace
-	logService.Spec.LogSetBasic = mo.Spec.LogService
 
 	return nil
 }

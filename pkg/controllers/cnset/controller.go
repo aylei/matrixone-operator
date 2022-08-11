@@ -22,7 +22,9 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type CNSetActor struct{}
@@ -59,5 +61,15 @@ func (c *CNSetActor) Finalize(ctx *recon.Context[*v1alpha1.CNSet]) (bool, error)
 }
 
 func (c *CNSetActor) Create(ctx *recon.Context[*v1alpha1.CNSet]) error {
+	klog.V(recon.Info).Info("dn set create...")
+	return nil
+}
+
+func (c *CNSetActor) Reconcile(mgr manager.Manager, cn *v1alpha1.CNSet) error {
+	err := recon.Setup[*v1alpha1.CNSet](cn, "cn set", mgr, c)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

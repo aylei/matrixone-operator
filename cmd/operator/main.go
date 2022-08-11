@@ -20,6 +20,7 @@ import (
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/dnset"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/matrixone"
+	"k8s.io/klog/v2"
 	"os"
 
 	kruisev1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -85,12 +86,17 @@ func main() {
 	}
 
 	//+kubebuilder:scaffold:builder
-	matrixoneActor := &matrixone.MatrixOneActor{
-		LogSet: logset.LogSetActor{},
-		DNSet:  dnset.DNSetActor{},
-		CNSet:  cnset.CNSetActor{},
+	dActor := &dnset.DNSetActor{}
+	cActor := &cnset.CNSetActor{}
+	lActor := &logset.LogSetActor{}
+	matrixoneActor := &matrixone.Actor{
+		Mgr:    mgr,
+		LActor: lActor,
+		DActor: dActor,
+		CActor: cActor,
 	}
-	err = recon.Setup[*v1alpha1.MatrixOneCluster](&v1alpha1.MatrixOneCluster{}, "matrixone", mgr, matrixoneActor)
+	klog.V(recon.Info).Info("start matrixone reconcile...")
+	err = matrixoneActor.Reconcile()
 	if err != nil {
 		setupLog.Error(err, "unable to set up matrixone controller")
 		os.Exit(1)

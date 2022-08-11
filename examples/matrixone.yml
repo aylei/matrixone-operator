@@ -3,16 +3,15 @@ kind: MatrixOneCluster
 metadata:
   name: mo
 spec:
-  version:
   cn:
     image: matrixorigin/mo-service:0.1.2
     replicas: 1
-    volume:
+    cacheVolume:
       size: 10Gi
   dn:
     image: matrixorigin/mo-service:0.1.2
     replicas: 1
-    volume:
+    cacheVolume:
       size: 10Gi
   logService:
     image: matrixorigin/mo-service:0.1.2
@@ -22,13 +21,8 @@ spec:
         path: test/bucket
     volume:
       size: 10Gi
-    overlay:
-      nodeSelector:
-        arch: amd64
-        topology.kubernetes.io/zone: us-west-2c
     initialConfig:
       logShards: 1
       dnShards: 1
       haKeeperReplicas: 3
       logShardReplicas: 3
-  webUIEnabled: false
