@@ -80,6 +80,10 @@ func (m *Actor) Observe(
 
 	cnSet := &v1alpha1.CNSet{}
 	err, foundCNSet := util.IsFound(ctx.Get(client.ObjectKey{Namespace: mo.Namespace, Name: mo.Name}, cnSet))
+	if err != nil {
+		return nil, errors.Wrap(err, "get cn service")
+	}
+
 	if !foundCNSet && !foundDNSet && !foundLogSet {
 		return m.Create, nil
 	}
@@ -108,6 +112,10 @@ func (m *Actor) Reconcile() error {
 	cnSet := &v1alpha1.CNSet{}
 	ms := &v1alpha1.MatrixOneCluster{}
 
+	if err := recon.Setup[*v1alpha1.MatrixOneCluster](ms, "matrixone", m.Mgr, m); err != nil {
+		return err
+	}
+
 	if err := initialDNSet(m.Mgr, dnSet, m.DActor); err != nil {
 		return err
 	}
@@ -118,9 +126,6 @@ func (m *Actor) Reconcile() error {
 		return err
 	}
 
-	if err := recon.Setup[*v1alpha1.MatrixOneCluster](ms, "matrixone", m.Mgr, m); err != nil {
-		return err
-	}
 	return nil
 }
 

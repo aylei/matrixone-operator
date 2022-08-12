@@ -23,9 +23,10 @@ import (
 func syncDNBasic(mo *v1alpha1.MatrixOneCluster, dn *v1alpha1.DNSet) error {
 
 	klog.V(recon.Debug).Info("sync DN basic...")
-	dn.Name = mo.Name
+	dn.Name = mo.Name + "-dn"
 	dn.Namespace = mo.Namespace
 	dn.Spec.DNSetBasic = mo.Spec.DN
+	dn.Kind = "DNSet"
 
 	return nil
 }
@@ -33,9 +34,10 @@ func syncDNBasic(mo *v1alpha1.MatrixOneCluster, dn *v1alpha1.DNSet) error {
 func syncCNBasic(mo *v1alpha1.MatrixOneCluster, cn *v1alpha1.CNSet) error {
 
 	klog.V(recon.Debug).Info("sync CN basic...")
-	cn.Name = mo.Name
+	cn.Name = mo.Name + "-cn"
 	cn.Namespace = mo.Namespace
 	cn.Spec.CNSetBasic = mo.Spec.CN
+	cn.Kind = "CNSet"
 
 	return nil
 }
@@ -43,8 +45,10 @@ func syncCNBasic(mo *v1alpha1.MatrixOneCluster, cn *v1alpha1.CNSet) error {
 func syncLogServiceBasic(mo *v1alpha1.MatrixOneCluster, logService *v1alpha1.LogSet) error {
 
 	klog.V(recon.Debug).Info("sync logService...")
-	logService.Name = mo.Name
+
+	logService.Name = mo.Name + "-log"
 	logService.Namespace = mo.Namespace
+	logService.Kind = "LogSet"
 
 	return nil
 }

@@ -365,10 +365,6 @@ spec:
                 description: WebUIEnabled indicates whether deploy the MO web-ui,
                   default to true.
                 type: boolean
-            required:
-            - cn
-            - dn
-            - logService
             type: object
           status:
             description: MatrixOneClusterStatus defines the observed state of MatrixOneCluster

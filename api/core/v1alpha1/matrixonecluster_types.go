@@ -24,19 +24,19 @@ import (
 type MatrixOneClusterSpec struct {
 	//  CN is the default CN pod set of this Cluster
 	// +required
-	CN CNSetBasic `json:"cn"`
+	CN CNSetBasic `json:"cn,omitempty"`
 
 	// DN is the default DN pod set of this Cluster
-	DN DNSetBasic `json:"dn"`
+	DN DNSetBasic `json:"dn,omitempty"`
 
 	// LogService is the default LogService pod set of this cluster
-	LogService LogSetBasic `json:"logService"`
+	LogService LogSetBasic `json:"logService,omitempty"`
 
 	// Version is the version of the cluster, which translated
 	// to the docker image tag used for each component.
 	// default to the recommended version of the operator
 	// +optional
-	Version *string `json:"version"`
+	Version *string `json:"version,omitempty"`
 
 	// WebUIEnabled indicates whether deploy the MO web-ui,
 	// default to true.
