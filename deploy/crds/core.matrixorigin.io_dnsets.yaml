@@ -2838,10 +2838,6 @@ spec:
                         format: int32
                         type: integer
                     type: object
-                  nodeSelector:
-                    additionalProperties:
-                      type: string
-                    type: object
                   podAnnotations:
                     additionalProperties:
                       type: string

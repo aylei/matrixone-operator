@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -54,6 +55,19 @@ type CNSet struct {
 	Spec   CNSetSpec   `json:"spec,omitempty"`
 	Deps   CNSetDeps   `json:"deps,omitempty"`
 	Status CNSetStatus `json:"status,omitempty"`
+}
+
+func (d *CNSet) GetDependencies() []recon.Dependency {
+	var deps []recon.Dependency
+	if d.Deps.LogSet != nil {
+		deps = append(deps, &recon.ObjectDependency[*LogSet]{
+			ObjectRef: d.Deps.LogSet,
+			ReadyFunc: func(l *LogSet) bool {
+				return l.Status.Ready()
+			},
+		})
+	}
+	return deps
 }
 
 //+kubebuilder:object:root=true

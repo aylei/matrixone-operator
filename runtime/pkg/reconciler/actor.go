@@ -56,6 +56,10 @@ type Context[T client.Object] struct {
 	context.Context
 	Obj T
 
+	// Dep hold the dependencies of the object T, will only be set when
+	// the object implement the `Dependant` interface
+	Dep T
+
 	Client client.Client
 	// TODO(aylei): add tracing
 	Event EventEmitter
@@ -116,7 +120,7 @@ func (c *Context[T]) Patch(obj client.Object, mutateFn func() error, opts ...cli
 // CreateOwned create the given object with an OwnerReference to the currently reconciling
 // controller object (ctx.Obj)
 func (c *Context[T]) CreateOwned(obj client.Object, opts ...client.CreateOption) error {
-	if err := controllerutil.SetOwnerReference(c.Obj, obj, c.reconciler.Scheme()); err != nil {
+	if err := controllerutil.SetControllerReference(c.Obj, obj, c.reconciler.Scheme()); err != nil {
 		return err
 	}
 	return c.Client.Create(c, obj, opts...)

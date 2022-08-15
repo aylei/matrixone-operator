@@ -816,19 +816,9 @@ func (in *MatrixOneClusterSpec) DeepCopyInto(out *MatrixOneClusterSpec) {
 	in.CN.DeepCopyInto(&out.CN)
 	in.DN.DeepCopyInto(&out.DN)
 	in.LogService.DeepCopyInto(&out.LogService)
-	if in.Version != nil {
-		in, out := &in.Version, &out.Version
-		*out = new(string)
-		**out = **in
-	}
 	if in.WebUIEnabled != nil {
 		in, out := &in.WebUIEnabled, &out.WebUIEnabled
 		*out = new(bool)
-		**out = **in
-	}
-	if in.ImageRepository != nil {
-		in, out := &in.ImageRepository, &out.ImageRepository
-		*out = new(string)
 		**out = **in
 	}
 }
@@ -847,8 +837,13 @@ func (in *MatrixOneClusterSpec) DeepCopy() *MatrixOneClusterSpec {
 func (in *MatrixOneClusterStatus) DeepCopyInto(out *MatrixOneClusterStatus) {
 	*out = *in
 	in.ConditionalStatus.DeepCopyInto(&out.ConditionalStatus)
-	if in.CN != nil {
-		in, out := &in.CN, &out.CN
+	if in.TP != nil {
+		in, out := &in.TP, &out.TP
+		*out = new(CNSetStatus)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.AP != nil {
+		in, out := &in.AP, &out.AP
 		*out = new(CNSetStatus)
 		(*in).DeepCopyInto(*out)
 	}
@@ -904,13 +899,6 @@ func (in *Overlay) DeepCopyInto(out *Overlay) {
 		*out = make([]v1.Container, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
-	if in.NodeSelector != nil {
-		in, out := &in.NodeSelector, &out.NodeSelector
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
 		}
 	}
 	if in.SecurityContext != nil {
@@ -998,6 +986,13 @@ func (in *PodSet) DeepCopyInto(out *PodSet) {
 		in, out := &in.TopologyEvenSpread, &out.TopologyEvenSpread
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.NodeSelector != nil {
+		in, out := &in.NodeSelector, &out.NodeSelector
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	if in.Config != nil {
 		in, out := &in.Config, &out.Config

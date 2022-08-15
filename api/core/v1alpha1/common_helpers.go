@@ -16,6 +16,7 @@ type Conditional interface {
 	SetCondition(c metav1.Condition)
 	GetConditions() []metav1.Condition
 	GetCondition(conditionType ConditionType) (*metav1.Condition, bool)
+	Ready() bool
 }
 
 func (c *ConditionalStatus) SetCondition(condition metav1.Condition) {
@@ -39,6 +40,14 @@ func (c *ConditionalStatus) GetCondition(conditionType ConditionType) (*metav1.C
 		}
 	}
 	return nil, false
+}
+
+func (c *ConditionalStatus) Ready() bool {
+	cond, found := c.GetCondition(ConditionTypeReady)
+	if !found {
+		return false
+	}
+	return cond.Status == metav1.ConditionTrue
 }
 
 func (o *Overlay) OverlayPodMeta(meta *metav1.ObjectMeta) {
@@ -78,9 +87,6 @@ func (o *Overlay) OverlayPodSpec(pod *corev1.PodSpec) {
 	//}
 	if o.Affinity != nil {
 		pod.Affinity = o.Affinity
-	}
-	if o.NodeSelector != nil {
-		pod.NodeSelector = o.NodeSelector
 	}
 	if o.ServiceAccountName != "" {
 		pod.ServiceAccountName = o.ServiceAccountName

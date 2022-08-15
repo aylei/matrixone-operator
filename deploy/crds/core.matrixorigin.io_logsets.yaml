@@ -74,6 +74,10 @@ spec:
                       be tuned after cluster creation currently. default to 1
                     type: integer
                 type: object
+              nodeSelector:
+                additionalProperties:
+                  type: string
+                type: object
               overlay:
                 description: Overlay allows advanced customization of the pod spec
                   in the set
@@ -2764,10 +2768,6 @@ spec:
                           https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                         format: int32
                         type: integer
-                    type: object
-                  nodeSelector:
-                    additionalProperties:
-                      type: string
                     type: object
                   podAnnotations:
                     additionalProperties:
@@ -6532,7 +6532,6 @@ spec:
                 - size
                 type: object
             required:
-            - initialConfig
             - replicas
             - sharedStorage
             - volume
@@ -6544,6 +6543,8 @@ spec:
                 items:
                   properties:
                     lastTransitionTime:
+                      description: lastTransitionTime is the latest timestamp a state
+                        transition occurs
                       format: date-time
                       type: string
                     phase:
@@ -6632,6 +6633,8 @@ spec:
                 items:
                   properties:
                     lastTransitionTime:
+                      description: lastTransitionTime is the latest timestamp a state
+                        transition occurs
                       format: date-time
                       type: string
                     phase:

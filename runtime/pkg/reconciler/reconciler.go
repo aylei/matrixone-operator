@@ -17,6 +17,8 @@ package reconciler
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"time"
 
 	kerr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,10 +50,15 @@ const (
 	ExtendedInfo = 3
 	Debug        = 4
 	Trace        = 5
+
+	// We don't want to requeue immediately since if the interval between two reconcile loops is smaller than the
+	// list-and-watch cache lag, there is wasted operations. This is does not affect correctness but do introduce
+	// unnecessary load on kube-apiserver.
+	defaultRequeueAfter = 2 * time.Second
 )
 
 var (
-	requeue = recon.Result{Requeue: true}
+	requeue = recon.Result{Requeue: true, RequeueAfter: defaultRequeueAfter}
 	forget  = recon.Result{Requeue: false}
 	none    = recon.Result{Requeue: true}
 )
@@ -125,13 +132,19 @@ func Setup[T client.Object](tpl T, name string, mgr ctrl.Manager, actor Actor[T]
 	// 3. register reconciler to the target kubernetes cluster
 	// TODO(aylei): figure out what sub-resources should be owned here
 	obj := r.newT()
-	builder := ctrl.NewControllerManagedBy(mgr)
+	bld := ctrl.NewControllerManagedBy(mgr)
 	if options.buildFn != nil {
-		options.buildFn(builder)
+		options.buildFn(bld)
 	}
-	return builder.Named(r.name).
+	// ignore status change
+	filter := predicate.Or(
+		predicate.GenerationChangedPredicate{},
+		predicate.LabelChangedPredicate{},
+		predicate.AnnotationChangedPredicate{},
+	)
+	return bld.Named(r.name).
 		WithOptions(r.ctrlOpts).
-		For(obj).
+		For(obj, builder.WithPredicates(filter)).
 		Complete(r)
 }
 
@@ -156,7 +169,7 @@ func (r *Reconciler[T]) Reconcile(goCtx context.Context, req recon.Request) (rec
 
 	// optionally transit to deleting state
 	if util.WasDeleted(obj) {
-		log.V(Debug).Info("finalize deleting object")
+		log.V(Info).Info("finalize deleting object")
 		return r.finalize(ctx)
 	}
 
@@ -165,7 +178,18 @@ func (r *Reconciler[T]) Reconcile(goCtx context.Context, req recon.Request) (rec
 		return none, errors.Wrap(err, "error adding finalizer to object")
 	}
 
-	// TODO(aylei): wait dependencies to be ready
+	if _, ok := any(obj).(Dependant); ok {
+		depHolder := obj.DeepCopyObject().(Dependant)
+		ready, err := r.waitDependencies(ctx, depHolder)
+		if err != nil {
+			return none, errors.Wrap(err, "error waiting dependencies to be ready")
+		}
+		if !ready {
+			return requeue, nil
+		}
+		ctx.Dep = depHolder.(T)
+	}
+
 	action, err := r.actor.Observe(ctx)
 	if err != nil {
 		ctx.Event.EmitEventGeneric(reconcileFail, "failed to observe status", err)
@@ -181,6 +205,7 @@ func (r *Reconciler[T]) Reconcile(goCtx context.Context, req recon.Request) (rec
 	if action == nil {
 		// No action to take implies the object reached desired state, we forget it
 		// now and wait for the next change to be watched or some resync timeouts.
+		ctx.Log.Info("object is synced, reconcile will be triggered on next change or resync")
 		ctx.Event.EmitEventGeneric(reconcileSuccess, "object is synced", nil)
 		return forget, nil
 	}
@@ -189,8 +214,22 @@ func (r *Reconciler[T]) Reconcile(goCtx context.Context, req recon.Request) (rec
 		ctx.Event.EmitEventGeneric(reconcileFail, fmt.Sprintf("failed to execute action %s", action), err)
 		return none, errors.Wrap(err, "error executing reconcile action")
 	}
-	// Always requeue after an successful action to check what should be done next
+	// Always requeue after a successful action to check what should be done next
 	return requeue, nil
+}
+
+func (r *Reconciler[T]) waitDependencies(ctx *Context[T], dt Dependant) (bool, error) {
+	deps := dt.GetDependencies()
+	for _, dep := range deps {
+		ready, err := dep.IsReady(ctx)
+		if err != nil {
+			return false, err
+		}
+		if !ready {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func (r *Reconciler[T]) finalize(ctx *Context[T]) (recon.Result, error) {
