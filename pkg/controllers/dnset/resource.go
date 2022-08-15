@@ -42,7 +42,6 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	}
 
 	return svc
-
 }
 
 // buildSvc build dn pod service

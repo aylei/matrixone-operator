@@ -28,7 +28,7 @@ import (
 
 func getDNServiceConfig(dn *v1alpha1.DNSet) *v1alpha1.TomlConfig {
 	dsCfg := v1alpha1.NewTomlConfig(map[string]interface{}{
-		"service-type":                getServiceType(dn),
+		"service-type":                "DN",
 		"log":                         getLogConfig(dn),
 		"fileservice":                 getFileServiceConfig(dn),
 		"dn":                          getDNMetaConfig(dn),
@@ -61,8 +61,8 @@ func getUpdateStrategyConfig(dn *v1alpha1.DNSet) kruise.CloneSetUpdateStrategy {
 
 func getDNObjMetaConfig(dn *v1alpha1.DNSet) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:        dn.Name,
-		Namespace:   dn.Namespace,
+		Name:        utils.GetName(dn),
+		Namespace:   utils.GetNamespace(dn),
 		Labels:      common.SubResourceLabels(dn),
 		Annotations: getDNAnnotation(dn),
 	}
@@ -108,10 +108,6 @@ func getEngineConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 	return map[string]interface{}{
 		"backend": dn.Spec.InitialConfig.StorageBackend,
 	}
-}
-
-func getServiceType(dn *v1alpha1.DNSet) string {
-	return "DN"
 }
 
 func getPodIP() string {

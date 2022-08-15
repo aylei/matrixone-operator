@@ -90,7 +90,7 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      configMapName,
-			Namespace: cn.Namespace,
+			Namespace: utils.GetNamespace(cn),
 			Labels:    common.SubResourceLabels(cn),
 		},
 		Data: map[string]string{

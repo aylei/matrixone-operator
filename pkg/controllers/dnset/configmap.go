@@ -112,7 +112,7 @@ func getSharedStorageConfig() map[string]interface{} {
 }
 
 func getLocalStorageConfig() map[string]interface{} {
-	return common.CommonFileServiceConfig(dataPath, "local")
+	return common.FileServiceConfig(dataPath, "local")
 }
 
 func getHaKeeperAdds(dn *v1alpha1.DNSet) []string {

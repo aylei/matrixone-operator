@@ -100,8 +100,8 @@ func addConfigMapDigest(cm *corev1.ConfigMap) error {
 	return nil
 }
 
-// CommonFileServiceConfig config common file service(local, s3 etc.) for all components
-func CommonFileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
+// FileServiceConfig config common file service(local, s3 etc.) for all components
+func FileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
 
 	switch fsType {
 	case "local":
