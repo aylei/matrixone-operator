@@ -99,3 +99,20 @@ func addConfigMapDigest(cm *corev1.ConfigMap) error {
 	cm.Name = fmt.Sprintf("%s-%s", cm.Name, suffix)
 	return nil
 }
+
+// CommonFileServiceConfig config common file service(local, s3 etc.) for all components
+func CommonFileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
+
+	switch fsType {
+	case "local":
+		// local file service
+		res = map[string]interface{}{
+			"name":     fsType,
+			"backend":  "DISK",
+			"data-dir": fsPath,
+		}
+	case "s3":
+	}
+
+	return res
+}
