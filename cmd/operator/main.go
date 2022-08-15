@@ -16,6 +16,8 @@ package main
 
 import (
 	"flag"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/cnset"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/dnset"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	corev1 "k8s.io/api/core/v1"
 
@@ -94,6 +96,20 @@ func main() {
 				Owns(&corev1.Service{})
 		})); err != nil {
 		setupLog.Error(err, "unable to set up logset controller")
+		os.Exit(1)
+	}
+
+	dnSetActor := &dnset.DNSetActor{}
+	err = dnSetActor.Reconcile(mgr, &v1alpha1.DNSet{})
+	if err != nil {
+		setupLog.Error(err, "unable to set up dn set controller")
+		os.Exit(1)
+	}
+
+	cnSetActor := &cnset.CNSetActor{}
+	err = cnSetActor.Reconcile(mgr, &v1alpha1.CNSet{})
+	if err != nil {
+		setupLog.Error(err, "unable to setup  dn set controller")
 		os.Exit(1)
 	}
 

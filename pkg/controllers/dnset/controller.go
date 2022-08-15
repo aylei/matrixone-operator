@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -120,7 +121,11 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 }
 
 func (d *DNSetActor) Reconcile(mgr manager.Manager, dn *v1alpha1.DNSet) error {
-	err := recon.Setup[*v1alpha1.DNSet](dn, "dn set", mgr, d)
+	err := recon.Setup[*v1alpha1.DNSet](dn, "dn set", mgr, d,
+		recon.WithBuildFn(func(b *builder.Builder) {
+			b.Owns(&kruise.CloneSet{}).
+				Owns(&corev1.Service{})
+		}))
 	if err != nil {
 		return err
 	}

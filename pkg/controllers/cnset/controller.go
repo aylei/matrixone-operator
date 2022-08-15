@@ -23,6 +23,7 @@ import (
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -66,7 +67,11 @@ func (c *CNSetActor) Create(ctx *recon.Context[*v1alpha1.CNSet]) error {
 }
 
 func (c *CNSetActor) Reconcile(mgr manager.Manager, cn *v1alpha1.CNSet) error {
-	err := recon.Setup[*v1alpha1.CNSet](cn, "cn set", mgr, c)
+	err := recon.Setup[*v1alpha1.CNSet](cn, "cn set", mgr, c,
+		recon.WithBuildFn(func(b *builder.Builder) {
+			b.Owns(&kruise.CloneSet{}).
+				Owns(&corev1.Service{})
+		}))
 	if err != nil {
 		return err
 	}

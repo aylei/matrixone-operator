@@ -1,5 +1,5 @@
 apiVersion: core.matrixorigin.io/v1alpha1
-kind: MatrixoneCluster
+kind: MatrixOneCluster
 metadata:
   name: mo
 spec:
@@ -21,6 +21,6 @@ spec:
       arch: amd64
       topology.kubernetes.io/zone: us-west-2c
   dn:
-    replicas: 2
+    replicas: 1
   tp:
-    replicas: 2
+    replicas: 1
