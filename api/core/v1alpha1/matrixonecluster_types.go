@@ -68,8 +68,7 @@ type MatrixOneClusterStatus struct {
 // +kubebuilder:resource:shortName=mo
 // +kubebuilder:printcolumn:name="Log",type="integer",JSONPath=".spec.logService.replicas"
 // +kubebuilder:printcolumn:name="DN",type="integer",JSONPath=".spec.dn.replicas"
-// +kubebuilder:printcolumn:name="TP",type="integer",JSONPath=".spec.tp.replicas"
-// +kubebuilder:printcolumn:name="AP",type="integer",JSONPath=".spec.ap.replicas"
+// +kubebuilder:printcolumn:name="CN",type="integer",JSONPath=".spec.cn.replicas"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MatrixOneCluster struct {

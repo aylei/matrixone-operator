@@ -161,13 +161,13 @@ func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
 	cloneSet.Spec.VolumeClaimTemplates = tpls
 }
 
-func syncReplicas(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
-	cs.Spec.Replicas = &ds.Spec.Replicas
+func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	cs.Spec.Replicas = &dn.Spec.Replicas
 
 }
 
-func syncPodMeta(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
-	ds.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
+func syncPodMeta(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	dn.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
 }
 
 func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {

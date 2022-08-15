@@ -31,7 +31,7 @@ func buildHeadlessSvc(cn *v1alpha1.CNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: utils.GetNamespace(cn),
-			Name:      utils.GetNamespace(cn),
+			Name:      utils.GetHeadlessSvcName(cn),
 			Labels:    common.SubResourceLabels(cn),
 		},
 

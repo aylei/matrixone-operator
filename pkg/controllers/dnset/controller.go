@@ -43,16 +43,20 @@ type WithResources struct {
 }
 
 func (d *DNSetActor) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[*v1alpha1.DNSet], error) {
-	ds := ctx.Obj
+	dn := ctx.Obj
 
 	svc := &corev1.Service{}
-	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, svc))
+	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{
+		Namespace: utils.GetNamespace(dn),
+		Name:      utils.GetName(dn)}, svc))
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service discovery service")
 	}
 
 	cloneSet := &kruise.CloneSet{}
-	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{Namespace: ds.Namespace, Name: ds.Name}, cloneSet))
+	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{
+		Namespace: utils.GetNamespace(dn),
+		Name:      utils.GetName(dn)}, cloneSet))
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service cloneset")
 	}
@@ -94,21 +98,21 @@ func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 
 func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 	klog.V(recon.Info).Info("create dn set...")
-	ds := ctx.Obj
+	dn := ctx.Obj
 
-	hSvc := buildHeadlessSvc(ds)
-	dsCloneSet := buildDNSet(ds)
-	svc := buildSvc(ds)
-	syncReplicas(ds, dsCloneSet)
-	syncPodMeta(ds, dsCloneSet)
-	syncPodSpec(ds, dsCloneSet)
-	syncPersistentVolumeClaim(ds, dsCloneSet)
-	configMap, err := buildDNSetConfigMap(ds)
+	hSvc := buildHeadlessSvc(dn)
+	dnCloneSet := buildDNSet(dn)
+	svc := buildSvc(dn)
+	syncReplicas(dn, dnCloneSet)
+	syncPodMeta(dn, dnCloneSet)
+	syncPodSpec(dn, dnCloneSet)
+	syncPersistentVolumeClaim(dn, dnCloneSet)
+	configMap, err := buildDNSetConfigMap(dn)
 	if err != nil {
 		return err
 	}
 
-	if err := common.SyncConfigMap(ctx, &dsCloneSet.Spec.Template.Spec, configMap); err != nil {
+	if err := common.SyncConfigMap(ctx, &dnCloneSet.Spec.Template.Spec, configMap); err != nil {
 		return err
 	}
 
@@ -116,7 +120,7 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 	err = lo.Reduce[client.Object, error]([]client.Object{
 		hSvc,
 		svc,
-		dsCloneSet,
+		dnCloneSet,
 	}, func(errs error, o client.Object, _ int) error {
 		err := ctx.CreateOwned(o)
 		return multierr.Append(errs, util.Ignore(apierrors.IsAlreadyExists, err))
