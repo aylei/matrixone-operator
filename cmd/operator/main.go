@@ -16,16 +16,11 @@ package main
 
 import (
 	"flag"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/dnset"
-	"k8s.io/klog/v2"
-	"os"
 
-	kruisev1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/mocluster"
+	kruisev1alpha1 "github.com/openkruise/kruise-api/apps/v1alpha1"
 	kruisev1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"go.uber.org/zap/zapcore"
-	corev1 "k8s.io/api/core/v1"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 
@@ -89,17 +84,16 @@ func main() {
 		os.Exit(1)
 	}
 
-
-	logsetActor := &logset.LogSetActor{}
-	if err := recon.Setup[*v1alpha1.LogSet](&v1alpha1.LogSet{}, "logset", mgr, logsetActor,
-		recon.WithBuildFn(func(b *builder.Builder) {
-			// watch all changes on the owned statefulset since we need perform failover if there is a pod failure
-			b.Owns(&kruisev1.StatefulSet{}).
-				Owns(&corev1.Service{})
-		})); err != nil {
-		setupLog.Error(err, "unable to set up logset controller")
-		os.Exit(1)
-	}
+	//logsetActor := &logset.LogSetActor{}
+	//if err := recon.Setup[*v1alpha1.LogSet](&v1alpha1.LogSet{}, "logset", mgr, logsetActor,
+	//	recon.WithBuildFn(func(b *builder.Builder) {
+	//		// watch all changes on the owned statefulset since we need perform failover if there is a pod failure
+	//		b.Owns(&kruisev1.StatefulSet{}).
+	//			Owns(&corev1.Service{})
+	//	})); err != nil {
+	//	setupLog.Error(err, "unable to set up logset controller")
+	//	os.Exit(1)
+	//}
 
 	moActor := &mocluster.MatrixoneClusterActor{}
 	if err := recon.Setup[*v1alpha1.MatrixoneCluster](&v1alpha1.MatrixoneCluster{}, "matrixonecluster", mgr, moActor,

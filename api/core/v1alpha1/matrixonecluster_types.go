@@ -22,12 +22,16 @@ import (
 // Note that MatrixOneCluster does not support specify overlay for underlying sets directly due to the size limitation
 // of kubernetes apiserver
 type MatrixOneClusterSpec struct {
-	//  CN is the default CN pod set of this Cluster
+	// TP is the default CN pod set that accepts client connections and execute queries
 	// +required
-	CN CNSetBasic `json:"cn,omitempty"`
+	TP CNSetBasic `json:"tp"`
+
+	// AP is an optional CN pod set that accept MPP sub-plans to accelerate sql queries
+	// +optionalsååå
+	AP *CNSetBasic `json:"ap,omitempty"`
 
 	// DN is the default DN pod set of this Cluster
-	DN DNSetBasic `json:"dn,omitempty"`
+	DN DNSetBasic `json:"dn"`
 
 	// LogService is the default LogService pod set of this cluster
 	LogService LogSetBasic `json:"logService,omitempty"`
@@ -80,7 +84,6 @@ type MatrixoneCluster struct {
 	Spec   MatrixOneClusterSpec   `json:"spec,omitempty"`
 	Status MatrixOneClusterStatus `json:"status,omitempty"`
 }
-
 
 //+kubebuilder:object:root=true
 
