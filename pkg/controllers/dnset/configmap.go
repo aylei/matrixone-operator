@@ -38,8 +38,8 @@ conf=$(mktemp)
 bc=$(mktemp)
 cat <<EOF > ${bc}
 uuid = "${UUID}"
-service-address = "0.0.0.0:{{ .DNServicePort }}"
-listen-address = "${ADDR}:{{ .DNServicePort }}"
+service-address = "${ADDR}:{{ .DNServicePort }}"
+listen-address = "0.0.0.0:{{ .DNServicePort }}"
 EOF
 
 # there is a chance that the dns is not yet added to kubedns and the
