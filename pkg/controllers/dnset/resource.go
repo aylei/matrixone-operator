@@ -17,7 +17,7 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/utils"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -93,33 +93,6 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 	return dnCloneSet
 }
 
-// buildDNSetConfigMap return dn set configmap
-func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
-	configName := utils.GetConfigName(dn)
-
-	dsCfg := dn.Spec.Config
-	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
-	if dsCfg == nil {
-		dsCfg = getDNServiceConfig(dn)
-	}
-	s, err := dsCfg.ToString()
-	if err != nil {
-		return nil, err
-	}
-
-	configMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dn.Namespace,
-			Name:      configName,
-			Labels:    common.SubResourceLabels(dn),
-		},
-		Data: map[string]string{
-			configName: s,
-		},
-	}
-	return configMap, nil
-}
-
 func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
 	dataPVC := corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
@@ -154,6 +127,13 @@ func syncPodSpec(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
 		Name:      v1alpha1.ContainerMain,
 		Image:     ds.Spec.Image,
 		Resources: ds.Spec.Resources,
+		Command: []string{
+			"/mo-service",
+		},
+		Args: []string{
+			"-cfg",
+			configPath,
+		},
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: dataVolume, ReadOnly: true, MountPath: dataPath},
 			{Name: configVolume, ReadOnly: true, MountPath: configPath},

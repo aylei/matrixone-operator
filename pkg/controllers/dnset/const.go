@@ -20,4 +20,10 @@ const (
 	configVolume  = "config"
 	configPath    = "/etc/dnservice"
 	PodNameEnvKey = "POD_NAME"
+	servicePort   = 41010
+	ListenIP      = "0.0.0.0"
+	PodIPEnvKey   = "POD_IP"
+	ServiceTypeDN = "DN"
+	ConfigFile    = "dnservice.toml"
+	Entrypoint    = "start.sh"
 )

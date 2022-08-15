@@ -59,8 +59,9 @@ spec:
               Note that MatrixOneCluster does not support specify overlay for underlying
               sets directly due to the size limitation of kubernetes apiserver
             properties:
-              cn:
-                description: CN is the default CN pod set of this Cluster
+              ap:
+                description: AP is an optional CN pod set that accept MPP sub-plans
+                  to accelerate sql queries
                 properties:
                   cacheVolume:
                     description: CacheVolume is the desired local cache volume for
@@ -196,6 +197,10 @@ spec:
                     default: 512
                     description: MaxSize log file max size
                     type: integer
+                  nodeSelector:
+                    additionalProperties:
+                      type: string
+                    type: object
                   replicas:
                     description: Replicas is the desired number of pods of this set
                     format: int32
@@ -408,6 +413,24 @@ spec:
                   config:
                     description: Config is the raw config for pods
                     type: string
+                  configmap:
+                    description: ConfigMap is reference to a key in a config map
+                    properties:
+                      key:
+                        description: The key to select.
+                        type: string
+                      name:
+                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                          TODO: Add other useful fields. apiVersion, kind, uid?'
+                        type: string
+                      optional:
+                        description: Specify whether the ConfigMap or its key must
+                          be defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                    x-kubernetes-map-type: atomic
                   image:
                     description: Image is the docker image of the main container
                     type: string
@@ -446,10 +469,16 @@ spec:
                           to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
+                  serviceType:
+                    default: ClusterIP
+                    description: ServiceType is the service type of cn service
+                    enum:
+                    - ClusterIP
+                    - NodePort
+                    - LoadBalancer
+                    type: string
                   topologySpread:
-                    description: TopologyEvenSpread specifies what topology domains
-                      the Pods in set should be evenly spread in. This will be overridden
-                      by .overlay.TopologySpreadConstraints
+                    description: This will overridden by .overlay.TopologySpreadConstraints
                     items:
                       type: string
                     type: array
@@ -467,7 +496,6 @@ spec:
                 type: boolean
             required:
             - dn
-            - logService
             - tp
             - version
             type: object

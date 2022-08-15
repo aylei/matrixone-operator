@@ -17,7 +17,7 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -113,7 +113,7 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 		return multierr.Append(errs, util.Ignore(apierrors.IsAlreadyExists, err))
 	}, nil)
 	if err != nil {
-		return errors.Wrap(err, "create")
+		return errors.Wrap(err, "create dn service")
 	}
 
 	return nil

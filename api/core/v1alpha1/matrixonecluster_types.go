@@ -77,7 +77,7 @@ type MatrixOneClusterStatus struct {
 // +kubebuilder:printcolumn:name="AP",type="integer",JSONPath=".spec.ap.replicas"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type MatrixoneCluster struct {
+type MatrixOneCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
