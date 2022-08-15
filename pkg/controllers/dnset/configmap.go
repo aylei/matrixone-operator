@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,14 +67,7 @@ exec /mo-service -cfg ${conf}
 type model struct {
 	HAKeeperPort   int
 	DNServicePort  int
-	FileService    []fileService
 	ConfigFilePath string
-}
-
-type fileService struct {
-	Name    string
-	Backend string
-	DataDir string
 }
 
 // buildDNSetConfigMap return dn set configmap
@@ -99,7 +91,6 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	buff := new(bytes.Buffer)
 	err = startScriptTpl.Execute(buff, &model{
-		FileService:    getFileService(dn),
 		ConfigFilePath: fmt.Sprintf("%s/%s", configPath, ConfigFile),
 	})
 
@@ -116,35 +107,21 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	}, nil
 }
 
-func getSharedStorageConfig() fileService {
-	return fileService{}
+func getSharedStorageConfig() map[string]interface{} {
+	return map[string]interface{}{}
 }
 
-func getLocalStorageConfig() fileService {
-	return fileService{
-		Name:    "local",
-		Backend: "DISK",
-		DataDir: dataPath,
-	}
+func getLocalStorageConfig() map[string]interface{} {
+	return common.CommonFileServiceConfig(dataPath, "local")
 }
 
-func getHaKeeperAdds() []string {
+func getHaKeeperAdds(dn *v1alpha1.DNSet) []string {
 	ls := &v1alpha1.LogSet{}
+	adr := GetHaKeeperClientAddressList(ls)
 
-	var seeds []string
-	for i := int32(0); i < ls.Spec.Replicas; i++ {
-		podName := fmt.Sprintf("%s-%d", utils.GetName(ls), i)
-		seeds = append(seeds, fmt.Sprintf("%s.%s.%s.svc:%d", podName,
-			utils.GetHeadlessSvcName(ls),
-			utils.GetNamespace(ls), logset.LogServicePort))
-	}
-	return seeds
+	return adr
 }
 
 func getStorageConfig(dn *v1alpha1.DNSet) []string {
 	return []string{}
-}
-
-func getFileService(dn *v1alpha1.DNSet) []fileService {
-	return []fileService{}
 }
