@@ -132,8 +132,16 @@ func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
 }
 
 func GetHaKeeperClientAddressList(lg *v1alpha1.LogSet) []string {
+	var numOfHa int
+
+	if lg.Spec.Replicas >= 3 {
+		numOfHa = 3
+	} else {
+		numOfHa = int(lg.Spec.Replicas)
+	}
+
 	var res []string
-	for k := 0; k < int(lg.Spec.Replicas); k++ {
+	for k := 0; k < numOfHa; k++ {
 		addr := fmt.Sprintf("%s.%s.%s.svc.cluster.local",
 			lg.Name+"-"+string(rune(k)),
 			utils.GetHeadlessSvcName(lg),
