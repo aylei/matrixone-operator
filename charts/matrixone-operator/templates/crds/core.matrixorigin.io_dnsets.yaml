@@ -90,7 +90,7 @@ spec:
                 type: string
               initialConfig:
                 properties:
-                  backend:
+                  storageBackend:
                     type: string
                 type: object
               level:
@@ -6558,6 +6558,7 @@ spec:
                 format: int32
                 type: integer
               scaleStrategy:
+                description: ScaleStrategy clone set scalestrategy config for dn service
                 properties:
                   maxUnavailable:
                     anyOf:
@@ -6590,6 +6591,8 @@ spec:
                   type: string
                 type: array
               updateStrategy:
+                description: Updatestrategy clone set updatestrategy config for dn
+                  service
                 properties:
                   inPlaceUpdateStrategy:
                     description: InPlaceUpdateStrategy contains strategies for in-place

@@ -4,6 +4,7 @@ import (
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type CNSetSpec struct {
@@ -28,6 +29,8 @@ type CNSetBasic struct {
 	// +optional
 	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
+	InitialConfig CNInitialConfig `json:"initialConfig,omitempty"`
+
 	// ConfigMap is reference to a key in a config map
 	// +optional
 	ConfigMap *corev1.ConfigMapKeySelector `json:"configmap,omitempty"`
@@ -42,6 +45,13 @@ type CNSetBasic struct {
 	// node storage will be used if not specified
 	// +optional
 	CacheVolume *Volume `json:"cacheVolume,omitempty"`
+}
+
+type CNInitialConfig struct {
+	// TPAvailable maximum ap set is available
+	// +optional
+	// kubebuilder:default=0
+	APAvailable *intstr.IntOrString `json:"apAvailable,omitempty"`
 }
 
 // TODO: figure out what status should be exposed

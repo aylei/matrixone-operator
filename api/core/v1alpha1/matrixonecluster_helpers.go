@@ -10,7 +10,7 @@ func (m *MatrixOneCluster) LogSetImage() string {
 	return image
 }
 
-func (m *MatrixOneCluster) DnSetImage() string {
+func (m *MatrixOneCluster) DNSetImage() string {
 	image := m.Spec.DN.Image
 	if image == "" {
 		image = m.defaultImage()
@@ -18,21 +18,21 @@ func (m *MatrixOneCluster) DnSetImage() string {
 	return image
 }
 
-func (m *MatrixOneCluster) TpSetImage() string {
-	image := m.Spec.TP.Image
+func (m *MatrixOneCluster) CNSetImage() string {
+	image := m.Spec.CN.Image
 	if image == "" {
 		image = m.defaultImage()
 	}
 	return image
 }
 
-func (m *MatrixOneCluster) ApSetImage() string {
-	image := m.Spec.AP.Image
-	if image == "" {
-		image = m.defaultImage()
-	}
-	return image
-}
+//func (m *MatrixOneCluster) ApSetImage() string {
+//	image := m.Spec.AP.Image
+//	if image == "" {
+//		image = m.defaultImage()
+//	}
+//	return image
+//}
 
 func (m *MatrixOneCluster) defaultImage() string {
 	return fmt.Sprintf("%s:%s", m.Spec.ImageRepository, m.Spec.Version)

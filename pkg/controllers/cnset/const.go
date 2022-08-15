@@ -18,7 +18,7 @@ const (
 	servicePort   = 1001
 	listenAddress = ""
 	logLevel      = "debug"
-	configFile    = "cn-config.toml"
+	configFile    = "cnservice.toml"
 	logFormatType = "json"
 	logMaxSize    = "512"
 	backendType   = "s3"
@@ -27,9 +27,9 @@ const (
 	operatorSize  = 3000
 	configVolume  = "config"
 	dataVolume    = "cndata"
-	configPath    = ""
-	Entrypoint    = ""
-	dataPath      = '"'
+	configPath    = "/etc/cnservice"
+	Entrypoint    = "start.sh"
+	dataPath      = "/var/lib/cnservice"
 	batchRow      = 300
 	batchSize     = 400
 )

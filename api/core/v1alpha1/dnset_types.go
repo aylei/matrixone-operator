@@ -44,7 +44,7 @@ type DNSetBasic struct {
 }
 
 type DNInitialConfig struct {
-	StorageBackend string `json:"backend,omitempty"`
+	StorageBackend string `json:"storageBackend,omitempty"`
 }
 
 // TODO: figure out what status should be exposed

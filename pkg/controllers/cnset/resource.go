@@ -120,11 +120,11 @@ func syncPodMeta(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
 	cn.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
 }
 
-func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
 	main := corev1.Container{
 		Name:      v1alpha1.ContainerMain,
-		Image:     dn.Spec.Image,
-		Resources: dn.Spec.Resources,
+		Image:     cn.Spec.Image,
+		Resources: cn.Spec.Resources,
 		Command: []string{
 			"/bin/sh", fmt.Sprintf("%s/%s", configPath, Entrypoint),
 		},
@@ -136,19 +136,19 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
 			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
 			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
-			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(dn)},
+			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(cn)},
 		},
 	}
-	dn.Spec.Overlay.OverlayMainContainer(&main)
+	cn.Spec.Overlay.OverlayMainContainer(&main)
 	podSpec := corev1.PodSpec{
 		Containers: []corev1.Container{main},
 		ReadinessGates: []corev1.PodReadinessGate{{
 			ConditionType: pub.InPlaceUpdateReady,
 		}},
 	}
-	common.SyncTopology(dn.Spec.TopologyEvenSpread, &podSpec)
+	common.SyncTopology(cn.Spec.TopologyEvenSpread, &podSpec)
 
-	dn.Spec.Overlay.OverlayPodSpec(&podSpec)
+	cn.Spec.Overlay.OverlayPodSpec(&podSpec)
 	cs.Spec.Template.Spec = podSpec
 }
 

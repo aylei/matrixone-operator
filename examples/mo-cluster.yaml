@@ -21,10 +21,14 @@ spec:
       arch: amd64
       topology.kubernetes.io/zone: us-west-2c
   dn:
-    replicas: 1
+    replicas: 3
+    initialConfig:
+      storageBackend: "MEM"
     cacheVolume:
       size: 10Gi
-  tp:
-    replicas: 1
+  cn:
+    replicas: 3
+    apAvailable: 1
+    initialConfig:
     cacheVolume:
       size: 10Gi
