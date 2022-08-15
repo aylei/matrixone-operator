@@ -216,7 +216,7 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	}
 
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
-	conf.Set([]string{"service-type"}, ServiceTypeDN)
+	conf.Set([]string{"service-type"}, common.DNService)
 	conf.Set([]string{"dn", "Txn", "Storage"}, getStorageConfig(dn))
 	conf.Set([]string{"fileservice"}, getLocalStorageConfig())
 	conf.Set([]string{"fileservice"}, getSharedStorageConfig())

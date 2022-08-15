@@ -22,5 +22,9 @@ spec:
       topology.kubernetes.io/zone: us-west-2c
   dn:
     replicas: 1
+    cacheVolume:
+      size: 10Gi
   tp:
     replicas: 1
+    cacheVolume:
+      size: 10Gi

@@ -14,8 +14,16 @@ import (
 )
 
 type FileType string
+type ServiceType string
 
 const (
+	DNService ServiceType = "DN"
+	CNService ServiceType = "CN"
+
+	S3Service    FileType = "s3"
+	MinioService FileType = "minio"
+	NFSService   FileType = "nfs"
+
 	InstanceLabelKey  = "matrixorigin.io/instance"
 	ComponentLabelKey = "matrixorigin.io/component"
 	// NamespaceLabelKey is the label key for cluster-scope resources

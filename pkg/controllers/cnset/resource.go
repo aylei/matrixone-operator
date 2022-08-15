@@ -28,7 +28,6 @@ const (
 )
 
 const (
-	serviceType   = "cn"
 	listenAddress = ""
 	logLevel      = "debug"
 	logFormatType = "json"
@@ -58,7 +57,7 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/dnservice/cfg.go
 	if dsCfg == nil {
 		dsCfg = v1alpha1.NewTomlConfig(map[string]interface{}{
-			"service-type":   serviceType,
+			"service-type":   common.CNService,
 			"listen-address": listenAddress,
 			"log": map[string]interface{}{
 				"level":    logLevel,

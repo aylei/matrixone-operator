@@ -15,7 +15,7 @@
 package dnset
 
 const (
-	dataVolume    = "data"
+	dataVolume    = "dndata"
 	dataPath      = "/var/lib/dnservice"
 	configVolume  = "config"
 	configPath    = "/etc/dnservice"
