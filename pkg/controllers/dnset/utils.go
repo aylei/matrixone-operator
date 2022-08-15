@@ -80,16 +80,8 @@ func getHAKeeperClientConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 }
 
 func getServiceAddresses(dn *v1alpha1.DNSet) []string {
-	var res []string
 	logSet := &v1alpha1.LogSet{}
-	for k := 0; k < int(logSet.Spec.Replicas); k++ {
-		addr := fmt.Sprintf("%s.%s.%s.svc.cluster.local",
-			logSet.Name+"-"+string(rune(k)),
-			utils.GetHeadlessSvcName(logSet),
-			logSet.Namespace)
-		res = append(res, fmt.Sprintf("%s:%s", addr, fmt.Sprint(logset.LogServicePort)))
-	}
-
+	res := GetHaKeeperClientAddressList(logSet)
 	return res
 }
 
@@ -102,11 +94,7 @@ func getFileServiceConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 }
 
 func getLogConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{
-		"level":    dn.Spec.Log.Level,
-		"format":   dn.Spec.Log.Format,
-		"max-size": dn.Spec.Log.MaxSize,
-	}
+	return map[string]interface{}{}
 }
 
 func getDNMetaConfig(dn *v1alpha1.DNSet) map[string]interface{} {
@@ -141,4 +129,17 @@ func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
 			Port: servicePort,
 		},
 	}
+}
+
+func GetHaKeeperClientAddressList(lg *v1alpha1.LogSet) []string {
+	var res []string
+	for k := 0; k < int(lg.Spec.Replicas); k++ {
+		addr := fmt.Sprintf("%s.%s.%s.svc.cluster.local",
+			lg.Name+"-"+string(rune(k)),
+			utils.GetHeadlessSvcName(lg),
+			lg.Namespace)
+		res = append(res, fmt.Sprintf("%s:%s", addr, fmt.Sprint(logset.LogServicePort)))
+	}
+
+	return res
 }
