@@ -95,21 +95,21 @@ func main() {
 			b.Owns(&kruisev1.StatefulSet{}).
 				Owns(&corev1.Service{})
 		})); err != nil {
-		setupLog.Error(err, "unable to set up logset controller")
+		setupLog.Error(err, "unable to set up log service controller")
 		os.Exit(1)
 	}
 
 	dnSetActor := &dnset.DNSetActor{}
 	err = dnSetActor.Reconcile(mgr, &v1alpha1.DNSet{})
 	if err != nil {
-		setupLog.Error(err, "unable to set up dn set controller")
+		setupLog.Error(err, "unable to set up dn service controller")
 		os.Exit(1)
 	}
 
 	cnSetActor := &cnset.CNSetActor{}
 	err = cnSetActor.Reconcile(mgr, &v1alpha1.CNSet{})
 	if err != nil {
-		setupLog.Error(err, "unable to setup  dn set controller")
+		setupLog.Error(err, "unable to setup  dn service controller")
 		os.Exit(1)
 	}
 
@@ -120,7 +120,7 @@ func main() {
 				Owns(&v1alpha1.DNSet{}).
 				Owns(&v1alpha1.CNSet{})
 		})); err != nil {
-		setupLog.Error(err, "unable to set up matrixonecluster controller")
+		setupLog.Error(err, "unable to set up matrixone cluster controller")
 		os.Exit(1)
 	}
 

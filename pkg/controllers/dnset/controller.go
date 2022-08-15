@@ -21,11 +21,13 @@ import (
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
+	kruisev1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -64,24 +66,31 @@ func (d *DNSetActor) Observe(ctx *recon.Context[*v1alpha1.DNSet]) (recon.Action[
 
 func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error) {
 	dn := ctx.Obj
-	var errs error
 
-	svcExit, err := ctx.Exist(client.ObjectKey{Namespace: dn.Namespace, Name: dn.Name}, &corev1.Service{})
-	err = multierr.Append(errs, err)
+	objs := []client.Object{&corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetHeadlessSvcName(dn),
+	}}, &kruisev1.StatefulSet{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetName(dn),
+	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetSvcName(dn),
+	}}}
+	for _, obj := range objs {
+		obj.SetNamespace(utils.GetNamespace(dn))
+		if err := util.Ignore(apierrors.IsNotFound, ctx.Delete(obj)); err != nil {
+			return false, err
+		}
+	}
+	for _, obj := range objs {
+		exist, err := ctx.Exist(client.ObjectKeyFromObject(obj), obj)
+		if err != nil {
+			return false, err
+		}
+		if exist {
+			return false, nil
+		}
+	}
 
-	hSvcExit, err := ctx.Exist(client.ObjectKey{
-		Namespace: dn.Namespace, Name: utils.GetHeadlessSvcName(dn)},
-		&corev1.Service{})
-	errs = multierr.Append(errs, err)
-
-	dnSetExit, err := ctx.Exist(client.ObjectKey{
-		Namespace: dn.Namespace, Name: utils.GetHeadlessSvcName(dn)},
-		&kruise.CloneSet{})
-	errs = multierr.Append(errs, err)
-
-	res := !hSvcExit && !dnSetExit && !svcExit
-
-	return res, nil
+	return true, nil
 }
 
 func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
@@ -121,7 +130,7 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 }
 
 func (d *DNSetActor) Reconcile(mgr manager.Manager, dn *v1alpha1.DNSet) error {
-	err := recon.Setup[*v1alpha1.DNSet](dn, "dn set", mgr, d,
+	err := recon.Setup[*v1alpha1.DNSet](dn, "dnset", mgr, d,
 		recon.WithBuildFn(func(b *builder.Builder) {
 			b.Owns(&kruise.CloneSet{}).
 				Owns(&corev1.Service{})

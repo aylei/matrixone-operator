@@ -143,3 +143,22 @@ func GetHaKeeperClientAddressList(lg *v1alpha1.LogSet) []string {
 
 	return res
 }
+
+func getSharedStorageConfig() map[string]interface{} {
+	return map[string]interface{}{}
+}
+
+func getLocalStorageConfig() map[string]interface{} {
+	return common.FileServiceConfig(dataPath, "local")
+}
+
+func getHaKeeperAdds(dn *v1alpha1.DNSet) []string {
+	ls := &v1alpha1.LogSet{}
+	adr := GetHaKeeperClientAddressList(ls)
+
+	return adr
+}
+
+func getStorageConfig(dn *v1alpha1.DNSet) []string {
+	return []string{}
+}

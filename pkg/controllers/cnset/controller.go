@@ -67,7 +67,7 @@ func (c *CNSetActor) Create(ctx *recon.Context[*v1alpha1.CNSet]) error {
 }
 
 func (c *CNSetActor) Reconcile(mgr manager.Manager, cn *v1alpha1.CNSet) error {
-	err := recon.Setup[*v1alpha1.CNSet](cn, "cn set", mgr, c,
+	err := recon.Setup[*v1alpha1.CNSet](cn, "cnset", mgr, c,
 		recon.WithBuildFn(func(b *builder.Builder) {
 			b.Owns(&kruise.CloneSet{}).
 				Owns(&corev1.Service{})
