@@ -52,7 +52,7 @@ func buildCNSet(cn *v1alpha1.DNSet) *kruise.CloneSet {
 	return cnCloneSet
 }
 
-func buildCNSetCOnfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
+func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 	configMapName := utils.GetConfigName(cn)
 	dsCfg := cn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/dnservice/cfg.go

@@ -20,7 +20,7 @@ import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/utils"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"text/template"
@@ -106,7 +106,7 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      utils.GetConfigName(dn),
+			Name:      utils.GetName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 		Data: map[string]string{

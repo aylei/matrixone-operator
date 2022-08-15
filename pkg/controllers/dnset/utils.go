@@ -19,6 +19,7 @@ import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -84,7 +85,7 @@ func getServiceAddresses(dn *v1alpha1.DNSet) []string {
 	for k := 0; k < int(logSet.Spec.Replicas); k++ {
 		addr := fmt.Sprintf("%s.%s.%s.svc.cluster.local",
 			logSet.Name+"-"+string(rune(k)),
-			logset.HeadlessSvcName(logSet),
+			utils.GetHeadlessSvcName(logSet),
 			logSet.Namespace)
 		res = append(res, fmt.Sprintf("%s:%s", addr, fmt.Sprint(logset.LogServicePort)))
 	}

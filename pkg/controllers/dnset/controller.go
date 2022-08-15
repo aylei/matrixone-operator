@@ -17,7 +17,7 @@ package dnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/utils"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"

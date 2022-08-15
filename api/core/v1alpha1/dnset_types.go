@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,10 +25,16 @@ type DNSetBasic struct {
 	// +kubebuilder:validation:Enum=ClusterIP;NodePort;LoadBalancer
 	ServiceType corev1.ServiceType `json:"serviceType,omitempty"`
 
+	InitialConfig DNInitialConfig `json:"initialConfig,omitempty"`
+
 	// CacheVolume is the desired local cache volume for DNSet,
 	// node storage will be used if not specified
 	// +optional
 	CacheVolume *Volume `json:"cacheVolume,omitempty"`
+}
+
+type DNInitialConfig struct {
+	Backend string `json:"backend,omitempty"`
 }
 
 // TODO: figure out what status should be exposed
