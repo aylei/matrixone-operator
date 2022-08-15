@@ -88,6 +88,11 @@ spec:
               image:
                 description: Image is the docker image of the main container
                 type: string
+              initialConfig:
+                properties:
+                  backend:
+                    type: string
+                type: object
               level:
                 default: info
                 description: 'Level log level: debug,info,warning'

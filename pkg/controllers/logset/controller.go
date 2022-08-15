@@ -1,9 +1,8 @@
 package logset
 
 import (
-	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"k8s.io/apimachinery/pkg/api/equality"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"time"
 
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"

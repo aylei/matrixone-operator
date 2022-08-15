@@ -10,11 +10,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ recon.Actor[*v1alpha1.MatrixoneCluster] = &MatrixoneClusterActor{}
+var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &MatrixoneClusterActor{}
 
 type MatrixoneClusterActor struct{}
 
-func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixoneCluster]) (recon.Action[*v1alpha1.MatrixoneCluster], error) {
+func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (recon.Action[*v1alpha1.MatrixOneCluster], error) {
 	mo := ctx.Obj
 
 	// sync specs
@@ -73,7 +73,7 @@ func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixoneCl
 	return nil, nil
 }
 
-func (r *MatrixoneClusterActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixoneCluster]) (bool, error) {
+func (r *MatrixoneClusterActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
 	mo := ctx.Obj
 	objs := []client.Object{
 		&v1alpha1.LogSet{ObjectMeta: logSetKey(mo)},
@@ -97,28 +97,28 @@ func (r *MatrixoneClusterActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixoneC
 	return !existAny, nil
 }
 
-func logSetKey(mo *v1alpha1.MatrixoneCluster) metav1.ObjectMeta {
+func logSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      mo.Name + "-log",
 		Namespace: mo.Namespace,
 	}
 }
 
-func dnSetKey(mo *v1alpha1.MatrixoneCluster) metav1.ObjectMeta {
+func dnSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      mo.Name + "-dn",
 		Namespace: mo.Namespace,
 	}
 }
 
-func tpSetKey(mo *v1alpha1.MatrixoneCluster) metav1.ObjectMeta {
+func tpSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      mo.Name + "-cn",
 		Namespace: mo.Namespace,
 	}
 }
 
-func apSetKey(mo *v1alpha1.MatrixoneCluster) metav1.ObjectMeta {
+func apSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      mo.Name + "-ap",
 		Namespace: mo.Namespace,

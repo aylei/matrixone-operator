@@ -16,7 +16,6 @@ import (
 type FileType string
 
 const (
-	DNTYPE
 	InstanceLabelKey  = "matrixorigin.io/instance"
 	ComponentLabelKey = "matrixorigin.io/component"
 	// NamespaceLabelKey is the label key for cluster-scope resources
