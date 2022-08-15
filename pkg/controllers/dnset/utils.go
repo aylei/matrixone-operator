@@ -86,11 +86,7 @@ func getServiceAddresses(dn *v1alpha1.DNSet) []string {
 }
 
 func getFileServiceConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{
-		"name":     "local",
-		"backend":  "DISK",
-		"data-dir": dataPath,
-	}
+	return common.FileServiceConfig(dataPath, "lcoal")
 }
 
 func getLogConfig(dn *v1alpha1.DNSet) map[string]interface{} {
