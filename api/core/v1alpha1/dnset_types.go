@@ -7,10 +7,8 @@ import (
 )
 
 type DNSetSpec struct {
-	DNSetBasic     `json:",inline"`
-	ScaleStrategy  CloneSetScaleStrategy  `json:"scaleStrategy,omitempty"`
-	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
-	CloneSetCommon `json:",inline"`
+	DNSetBasic `json:",inline"`
+
 	// +optional
 	Overlay *Overlay `json:"overlay,omitempty"`
 }
@@ -18,6 +16,18 @@ type DNSetSpec struct {
 type DNSetBasic struct {
 	PodSet    `json:",inline"`
 	LogConfig `json:",inline"`
+
+	// ClonSetCommon kruise clone set common config for cnset
+	// +optional
+	CloneSetCommon `json:",inline"`
+
+	// ScaleStrategy clone set scalestrategy config for dn service
+	// +optional
+	ScaleStrategy CloneSetScaleStrategy `json:"scaleStrategy,omitempty"`
+
+	// Updatestrategy clone set updatestrategy config for dn service
+	// +optional
+	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
 	// ServiceType is the service type of dn service
 	// +optional

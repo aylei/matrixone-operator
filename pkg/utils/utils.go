@@ -22,7 +22,7 @@ import (
 
 const (
 	svcSuffix    = "-discovery"
-	hSvcSuffix   = "-headless"
+	hSvcSuffix   = ""
 	configSuffix = "-config"
 )
 

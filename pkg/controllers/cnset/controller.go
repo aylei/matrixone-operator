@@ -16,12 +16,17 @@ package cnset
 
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"go.uber.org/multierr"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,34 +40,89 @@ var _ recon.Actor[*v1alpha1.CNSet] = &CNSetActor{}
 func (c *CNSetActor) Observe(ctx *recon.Context[*v1alpha1.CNSet]) (recon.Action[*v1alpha1.CNSet], error) {
 	cn := ctx.Obj
 
-	cloneSet := kruise.CloneSet{}
-	err, foundCloneSet := util.IsFound(ctx.Get(
-		client.ObjectKey{Namespace: cn.Namespace, Name: getCNSetName(cn)}, &cloneSet))
+	svc := &corev1.Service{}
+	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{
+		Namespace: utils.GetNamespace(cn),
+		Name:      utils.GetName(cn)}, svc))
 	if err != nil {
-		return nil, errors.Wrap(err, "get cn service ")
+		return nil, errors.Wrap(err, "get dn service discovery service")
 	}
 
-	if !foundCloneSet {
+	cloneSet := &kruise.CloneSet{}
+	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{
+		Namespace: utils.GetNamespace(cn), Name: utils.GetName(cn)}, cloneSet))
+	if err != nil {
+		return nil, errors.Wrap(err, "get dn service cloneset")
+	}
+
+	if !foundCs || !foundSvc {
 		return c.Create, nil
 	}
-
 	return nil, nil
+
 }
 
 func (c *CNSetActor) Finalize(ctx *recon.Context[*v1alpha1.CNSet]) (bool, error) {
 	cn := ctx.Obj
-	var errs error
 
-	cnSvcExist, err := ctx.Exist(client.ObjectKey{
-		Namespace: cn.Namespace, Name: getCNSetHeadlessSvcName(cn)}, &corev1.Service{})
-	cnExist, err := ctx.Exist(client.ObjectKey{
-		Namespace: cn.Namespace, Name: getCNSetName(cn)}, &kruise.CloneSet{})
-	errs = multierr.Append(errs, err)
-	return (!cnExist) && (!cnSvcExist), nil
+	objs := []client.Object{&corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetHeadlessSvcName(cn),
+	}}, &kruise.CloneSet{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetName(cn),
+	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name: utils.GetSvcName(cn),
+	}}}
+	for _, obj := range objs {
+		obj.SetNamespace(utils.GetNamespace(cn))
+		if err := util.Ignore(apierrors.IsNotFound, ctx.Delete(obj)); err != nil {
+			return false, err
+		}
+	}
+	for _, obj := range objs {
+		exist, err := ctx.Exist(client.ObjectKeyFromObject(obj), obj)
+		if err != nil {
+			return false, err
+		}
+		if exist {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 func (c *CNSetActor) Create(ctx *recon.Context[*v1alpha1.CNSet]) error {
 	klog.V(recon.Info).Info("dn set create...")
+	cn := ctx.Obj
+
+	hSvc := buildHeadlessSvc(cn)
+	cnCloneSet := buildCNSet(cn)
+	svc := buildSvc(cn)
+	syncReplicas(cn, cnCloneSet)
+	syncPodMeta(cn, cnCloneSet)
+	syncPodSpec(cn, cnCloneSet)
+	syncPersistentVolumeClaim(cn, cnCloneSet)
+	configMap, err := buildCNSetConfigMap(cn)
+	if err != nil {
+		return err
+	}
+
+	if err := common.SyncConfigMap(ctx, &cnCloneSet.Spec.Template.Spec, configMap); err != nil {
+		return err
+	}
+
+	// create all resources
+	err = lo.Reduce[client.Object, error]([]client.Object{
+		hSvc,
+		svc,
+		cnCloneSet,
+	}, func(errs error, o client.Object, _ int) error {
+		err := ctx.CreateOwned(o)
+		return multierr.Append(errs, util.Ignore(apierrors.IsAlreadyExists, err))
+	}, nil)
+	if err != nil {
+		return errors.Wrap(err, "create dn service")
+	}
 	return nil
 }
 

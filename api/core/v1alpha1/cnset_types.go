@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -15,6 +15,18 @@ type CNSetSpec struct {
 
 type CNSetBasic struct {
 	PodSet `json:",inline"`
+
+	// CloneSetCommon kruise clone set common config for cnset
+	// +optional
+	CloneSetCommon `json:",inline"`
+
+	// ScaleStrategy clone set scalestrategy config for cn service
+	// +optional
+	ScaleStrategy CloneSetScaleStrategy `json:"scaleStrategy,omitempty"`
+
+	// Updatestrategy clone set updatestrategy config for cn service
+	// +optional
+	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
 	// ConfigMap is reference to a key in a config map
 	// +optional

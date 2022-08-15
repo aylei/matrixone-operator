@@ -15,40 +15,141 @@
 package cnset
 
 import (
+	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
+	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
+	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const (
-	configFile = "cn-config.toml"
-)
-
-const (
-	listenAddress = ""
-	logLevel      = "debug"
-	logFormatType = "json"
-	logMaxSize    = "512"
-	backendType   = "s3"
-	hostSize      = 1000
-	guestSize     = 2000
-	operatorSize  = 3000
-	batchRow      = 300
-	batchSize     = 400
-)
-
 func buildHeadlessSvc(cn *v1alpha1.CNSet) *corev1.Service {
-	svc := &corev1.Service{}
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: utils.GetNamespace(cn),
+			Name:      utils.GetNamespace(cn),
+			Labels:    common.SubResourceLabels(cn),
+		},
 
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Ports:     getCNServicePort(cn),
+			Selector:  common.SubResourceLabels(cn),
+		},
+	}
+
+	return svc
+
+}
+
+func buildSvc(cn *v1alpha1.CNSet) *corev1.Service {
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: utils.GetNamespace(cn),
+			Name:      utils.GetSvcName(cn),
+			Labels:    common.SubResourceLabels(cn),
+		},
+
+		Spec: corev1.ServiceSpec{
+			Type:     cn.Spec.ServiceType,
+			Ports:    getCNServicePort(cn),
+			Selector: common.SubResourceLabels(cn),
+		},
+	}
 	return svc
 }
 
-func buildCNSet(cn *v1alpha1.DNSet) *kruise.CloneSet {
-	cnCloneSet := &kruise.CloneSet{}
+func buildCNSet(cn *v1alpha1.CNSet) *kruise.CloneSet {
+	cnCloneSet := &kruise.CloneSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: utils.GetNamespace(cn),
+			Name:      utils.GetName(cn),
+		},
+		Spec: kruise.CloneSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: common.SubResourceLabels(cn),
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        utils.GetName(cn),
+					Namespace:   utils.GetNamespace(cn),
+					Labels:      common.SubResourceLabels(cn),
+					Annotations: map[string]string{},
+				},
+			},
+			ScaleStrategy:        getScaleStrategyConfig(cn),
+			UpdateStrategy:       getUpdateStrategyConfig(cn),
+			RevisionHistoryLimit: cn.Spec.RevisionHistoryLimit,
+			MinReadySeconds:      cn.Spec.MinReadySeconds,
+			Lifecycle:            cn.Spec.Lifecycle,
+		},
+	}
 	return cnCloneSet
+}
+
+func syncPersistentVolumeClaim(cn *v1alpha1.CNSet, cloneSet *kruise.CloneSet) {
+	dataPVC := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: dataVolume,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceStorage: cn.Spec.CacheVolume.Size,
+				},
+			},
+			StorageClassName: cn.Spec.CacheVolume.StorageClassName,
+		},
+	}
+	tpls := []corev1.PersistentVolumeClaim{dataPVC}
+	cn.Spec.Overlay.AppendVolumeClaims(&tpls)
+	cloneSet.Spec.VolumeClaimTemplates = tpls
+}
+
+func syncReplicas(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
+	cs.Spec.Replicas = &cn.Spec.Replicas
+
+}
+
+func syncPodMeta(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
+	cn.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
+}
+
+func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+	main := corev1.Container{
+		Name:      v1alpha1.ContainerMain,
+		Image:     dn.Spec.Image,
+		Resources: dn.Spec.Resources,
+		Command: []string{
+			"/bin/sh", fmt.Sprintf("%s/%s", configPath, Entrypoint),
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{Name: dataVolume, ReadOnly: true, MountPath: dataPath},
+			{Name: configVolume, ReadOnly: true, MountPath: configPath},
+		},
+		Env: []corev1.EnvVar{
+			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
+			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
+			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
+			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(dn)},
+		},
+	}
+	dn.Spec.Overlay.OverlayMainContainer(&main)
+	podSpec := corev1.PodSpec{
+		Containers: []corev1.Container{main},
+		ReadinessGates: []corev1.PodReadinessGate{{
+			ConditionType: pub.InPlaceUpdateReady,
+		}},
+	}
+	common.SyncTopology(dn.Spec.TopologyEvenSpread, &podSpec)
+
+	dn.Spec.Overlay.OverlayPodSpec(&podSpec)
+	cs.Spec.Template.Spec = podSpec
 }
 
 func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {

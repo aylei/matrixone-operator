@@ -78,8 +78,8 @@ exec /mo-service -cfg ${conf}
 func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dn.Namespace,
-			Name:      utils.GetNamespace(dn),
+			Namespace: utils.GetNamespace(dn),
+			Name:      utils.GetHeadlessSvcName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 
@@ -212,9 +212,9 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
 	conf.Set([]string{"service-type"}, common.DNService)
-	conf.Set([]string{"dn", "Txn", "Storage"}, getStorageConfig(dn))
-	conf.Set([]string{"fileservice"}, getLocalStorageConfig())
-	conf.Set([]string{"fileservice"}, getSharedStorageConfig())
+	conf.Set([]string{"dn", "Txn.Storage", "Storage"}, getStorageConfig(dn))
+	conf.Set([]string{"fileservice", "name"}, "s3")
+	conf.Set([]string{"fileservice", "name"}, "test")
 	conf.Set([]string{"dn", "hakeeper-client", "service-addresses"}, getHaKeeperAdds(dn))
 	s, err := conf.ToString()
 	if err != nil {
@@ -237,4 +237,7 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 			Entrypoint: buff.String(),
 		},
 	}, nil
+}
+
+type FileServie struct {
 }
