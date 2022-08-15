@@ -17,6 +17,11 @@ type FileType string
 type ServiceType string
 
 const (
+	PodNameEnvKey     = "POD_NAME"
+	HeadlessSvcEnvKey = "HEADLESS_SERVICE_NAME"
+	NamespaceEnvKey   = "NAMESPACE"
+	PodIPEnvKey       = "POD_IP"
+
 	DNService ServiceType = "DN"
 	CNService ServiceType = "CN"
 

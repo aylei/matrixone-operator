@@ -20,6 +20,7 @@ import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
+	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -169,41 +170,35 @@ func syncPodMeta(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
 	ds.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
 }
 
-func syncPodSpec(ds *v1alpha1.DNSet, cs *kruise.CloneSet) {
+func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 	main := corev1.Container{
 		Name:      v1alpha1.ContainerMain,
-		Image:     ds.Spec.Image,
-		Resources: ds.Spec.Resources,
+		Image:     dn.Spec.Image,
+		Resources: dn.Spec.Resources,
 		Command: []string{
-			"/mo-service",
-		},
-		Args: []string{
-			"-cfg",
-			configPath,
+			"/bin/sh", fmt.Sprintf("%s/%s", configPath, Entrypoint),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: dataVolume, ReadOnly: true, MountPath: dataPath},
 			{Name: configVolume, ReadOnly: true, MountPath: configPath},
 		},
-		Env: []corev1.EnvVar{{
-			Name: PodNameEnvKey,
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "metadata.name",
-				},
-			},
-		}},
+		Env: []corev1.EnvVar{
+			util.FieldRefEnv(PodNameEnvKey, "metadata.name"),
+			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
+			util.FieldRefEnv(PodIPEnvKey, "status.podIP"),
+			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(dn)},
+		},
 	}
-	ds.Spec.Overlay.OverlayMainContainer(&main)
+	dn.Spec.Overlay.OverlayMainContainer(&main)
 	podSpec := corev1.PodSpec{
 		Containers: []corev1.Container{main},
 		ReadinessGates: []corev1.PodReadinessGate{{
 			ConditionType: pub.InPlaceUpdateReady,
 		}},
 	}
-	common.SyncTopology(ds.Spec.TopologyEvenSpread, &podSpec)
+	common.SyncTopology(dn.Spec.TopologyEvenSpread, &podSpec)
 
-	ds.Spec.Overlay.OverlayPodSpec(&podSpec)
+	dn.Spec.Overlay.OverlayPodSpec(&podSpec)
 	cs.Spec.Template.Spec = podSpec
 }
 

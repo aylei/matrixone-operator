@@ -21,7 +21,6 @@ import (
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
-	kruisev1 "github.com/openkruise/kruise-api/apps/v1beta1"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"go.uber.org/multierr"
@@ -69,7 +68,7 @@ func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 
 	objs := []client.Object{&corev1.Service{ObjectMeta: metav1.ObjectMeta{
 		Name: utils.GetHeadlessSvcName(dn),
-	}}, &kruisev1.StatefulSet{ObjectMeta: metav1.ObjectMeta{
+	}}, &kruise.CloneSet{ObjectMeta: metav1.ObjectMeta{
 		Name: utils.GetName(dn),
 	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
 		Name: utils.GetSvcName(dn),
