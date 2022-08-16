@@ -20,12 +20,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	svcSuffix    = "-discovery"
-	hSvcSuffix   = ""
-	configSuffix = "-config"
-)
-
 func GetNamespacedName(obj client.Object) types.NamespacedName {
 	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
 }
@@ -44,24 +38,4 @@ func IsServiceReady(svc *corev1.Service) bool {
 	}
 
 	return true
-}
-
-func GetHeadlessSvcName[T client.Object](obj T) string {
-	return obj.GetName() + hSvcSuffix
-}
-
-func GetDiscoverySvcName[T client.Object](obj T) string {
-	return obj.GetName() + svcSuffix
-}
-
-func GetConfigName[T client.Object](obj T) string {
-	return obj.GetName() + configSuffix
-}
-
-func GetName[T client.Object](obj T) string {
-	return obj.GetName()
-}
-
-func GetNamespace[T client.Object](obj T) string {
-	return obj.GetNamespace()
 }

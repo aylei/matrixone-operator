@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
@@ -41,7 +39,7 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 		Image:     dn.Spec.Image,
 		Resources: dn.Spec.Resources,
 		Command: []string{
-			"/bin/sh", fmt.Sprintf("%s/%s", common.ConfigPath, Entrypoint),
+			"/bin/sh", fmt.Sprintf("%s/%s", common.ConfigPath, common.Entrypoint),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{Name: common.DataVolume, ReadOnly: true, MountPath: common.DataPath},
@@ -51,7 +49,7 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
 			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
 			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
-			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(dn)},
+			{Name: common.HeadlessSvcEnvKey, Value: common.GetHeadlessSvcName(dn)},
 		},
 	}
 	dn.Spec.Overlay.OverlayMainContainer(&main)
@@ -79,14 +77,10 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	//}
 
 	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: utils.GetNamespace(dn),
-			Name:      utils.GetConfigName(dn),
-			Labels:    common.SubResourceLabels(dn),
-		},
+		ObjectMeta: common.GetObjMeta(dn),
 		Data: map[string]string{
 			//ConfigFile: s,
-			Entrypoint: buff.String(),
+			common.Entrypoint: buff.String(),
 		},
 	}, nil
 }

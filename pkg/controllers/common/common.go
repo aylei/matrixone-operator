@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cespare/xxhash"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -21,6 +20,10 @@ type ServiceType string
 type BackendType string
 
 const (
+	svcSuffix    = "-discovery"
+	hSvcSuffix   = ""
+	configSuffix = "-config"
+
 	PodNameEnvKey     = "POD_NAME"
 	HeadlessSvcEnvKey = "HEADLESS_SERVICE_NAME"
 	NamespaceEnvKey   = "NAMESPACE"
@@ -32,6 +35,7 @@ const (
 	ConfigVolume = "config"
 	ConfigPath   = "/etc/matrixone/config"
 	configFile   = "config.toml"
+	Entrypoint   = "start.sh"
 
 	DNService ServiceType = "DN"
 	CNService ServiceType = "CN"
@@ -151,8 +155,8 @@ func FileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
 
 func getHeadlessSvcObjMeta(obj client.Object) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:        utils.GetHeadlessSvcName(obj),
-		Namespace:   utils.GetNamespace(obj),
+		Name:        GetHeadlessSvcName(obj),
+		Namespace:   GetNamespace(obj),
 		Annotations: map[string]string{},
 		Labels:      SubResourceLabels(obj),
 	}
@@ -160,13 +164,15 @@ func getHeadlessSvcObjMeta(obj client.Object) metav1.ObjectMeta {
 
 func getDiscoverySvcObjMeta(obj client.Object) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:        utils.GetDiscoverySvcName(obj),
-		Namespace:   utils.GetNamespace(obj),
+		Name:        GetDiscoverySvcName(obj),
+		Namespace:   GetNamespace(obj),
 		Labels:      SubResourceLabels(obj),
 		Annotations: map[string]string{},
 	}
 }
 
+// GetHeadlessService return k8s headless service
+// https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
 func GetHeadlessService(obj client.Object, ports []corev1.ServicePort) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: getHeadlessSvcObjMeta(obj),
@@ -179,6 +185,8 @@ func GetHeadlessService(obj client.Object, ports []corev1.ServicePort) *corev1.S
 
 }
 
+// GetDiscoveryService return k8s service
+// https://kubernetes.io/docs/concepts/services-networking/service
 func GetDiscoveryService(
 	obj client.Object, ports []corev1.ServicePort, serviceType corev1.ServiceType) *corev1.Service {
 	return &corev1.Service{
@@ -192,15 +200,17 @@ func GetDiscoveryService(
 	}
 }
 
+// GetObjMeta return k8s object metadata
 func GetObjMeta[T client.Object](obj T) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
-		Name:        utils.GetName(obj),
-		Namespace:   utils.GetNamespace(obj),
+		Name:        GetName(obj),
+		Namespace:   GetNamespace(obj),
 		Annotations: map[string]string{},
 		Labels:      SubResourceLabels(obj),
 	}
 }
 
+// GetCloneSet return kruise clone set object
 func GetCloneSet(obj client.Object) *kruise.CloneSet {
 	return &kruise.CloneSet{
 		ObjectMeta: GetObjMeta(obj),
@@ -230,4 +240,24 @@ func GetPersistentVolumeClaim(size resource.Quantity, sc *string) corev1.Persist
 			StorageClassName: sc,
 		},
 	}
+}
+
+func GetHeadlessSvcName(obj client.Object) string {
+	return obj.GetName() + hSvcSuffix
+}
+
+func GetDiscoverySvcName(obj client.Object) string {
+	return obj.GetName() + svcSuffix
+}
+
+func GetConfigName(obj client.Object) string {
+	return obj.GetName() + configSuffix
+}
+
+func GetName(obj client.Object) string {
+	return obj.GetName()
+}
+
+func GetNamespace(obj client.Object) string {
+	return obj.GetNamespace()
 }

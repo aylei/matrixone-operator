@@ -16,5 +16,4 @@ package dnset
 
 const (
 	servicePort = 41010
-	Entrypoint  = "start.sh"
 )
