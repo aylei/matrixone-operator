@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/openkruise/kruise-api/apps/pub"
@@ -98,7 +99,7 @@ func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      utils.GetSvcName(dn),
+			Name:      utils.GetDiscoverySvcName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 
@@ -213,9 +214,7 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	conf.Set([]string{"service-type"}, common.DNService)
 	conf.Set([]string{"dn", "Txn", "Storage"}, getStorageConfig(dn))
-	conf.Set([]string{"fileservice", "name"}, "s3")
-	conf.Set([]string{"fileservice", "name"}, "test")
-	conf.Set([]string{"dn", "hakeeper-client", "service-addresses"}, getHaKeeperAdds(dn))
+	conf.Set([]string{"dn", "hakeeper-client", "discovery-address"}, logset.DiscoverySvcAddress(&v1alpha1.LogSet{}))
 	s, err := conf.ToString()
 	if err != nil {
 		return nil, err

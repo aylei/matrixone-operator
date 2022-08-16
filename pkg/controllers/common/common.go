@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 
 	"github.com/cespare/xxhash"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
@@ -35,7 +36,7 @@ const (
 	MemoryEngine BackendType = "MEM"
 	TAEEngine    BackendType = "TAE"
 
-	HakepeerPort = 32001
+	HakapeerPort = 32001
 
 	InstanceLabelKey  = "matrixorigin.io/instance"
 	ComponentLabelKey = "matrixorigin.io/component"
@@ -138,4 +139,9 @@ func FileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
 	}
 
 	return res
+}
+
+func GetHaKepeerDiscoveryAddress(ls *v1alpha1.LogSet) string {
+
+	return ""
 }

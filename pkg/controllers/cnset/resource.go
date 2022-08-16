@@ -50,7 +50,7 @@ func buildSvc(cn *v1alpha1.CNSet) *corev1.Service {
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: utils.GetNamespace(cn),
-			Name:      utils.GetSvcName(cn),
+			Name:      utils.GetDiscoverySvcName(cn),
 			Labels:    common.SubResourceLabels(cn),
 		},
 

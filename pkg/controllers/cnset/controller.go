@@ -70,7 +70,7 @@ func (c *CNSetActor) Finalize(ctx *recon.Context[*v1alpha1.CNSet]) (bool, error)
 	}}, &kruise.CloneSet{ObjectMeta: metav1.ObjectMeta{
 		Name: utils.GetName(cn),
 	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
-		Name: utils.GetSvcName(cn),
+		Name: utils.GetDiscoverySvcName(cn),
 	}}}
 	for _, obj := range objs {
 		obj.SetNamespace(utils.GetNamespace(cn))

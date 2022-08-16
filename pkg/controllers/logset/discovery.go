@@ -34,7 +34,7 @@ func discoverySvcName(ls *v1alpha1.LogSet) string {
 	return ls.Name + "-discovery"
 }
 
-func discoverySvcAddress(ls *v1alpha1.LogSet) string {
+func DiscoverySvcAddress(ls *v1alpha1.LogSet) string {
 	// TODO(aylei): we need FQDN (name.ns.svc.cluster.${clusterName}) for cross-cluster dns resolution
 	return fmt.Sprintf("%s.%s.svc", discoverySvcName(ls), ls.Namespace)
 }

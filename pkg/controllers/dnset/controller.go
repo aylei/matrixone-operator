@@ -75,7 +75,7 @@ func (d *DNSetActor) Finalize(ctx *recon.Context[*v1alpha1.DNSet]) (bool, error)
 	}}, &kruise.CloneSet{ObjectMeta: metav1.ObjectMeta{
 		Name: utils.GetName(dn),
 	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
-		Name: utils.GetSvcName(dn),
+		Name: utils.GetDiscoverySvcName(dn),
 	}}}
 	for _, obj := range objs {
 		obj.SetNamespace(utils.GetNamespace(dn))

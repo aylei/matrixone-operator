@@ -86,7 +86,7 @@ func (r *LogSetActor) Observe(ctx *recon.Context[*v1alpha1.LogSet]) (recon.Actio
 	}
 	ls.Status.Discovery = &v1alpha1.LogSetDiscovery{
 		Port:    LogServicePort,
-		Address: discoverySvcAddress(ls),
+		Address: DiscoverySvcAddress(ls),
 	}
 
 	switch {

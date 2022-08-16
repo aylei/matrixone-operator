@@ -50,7 +50,7 @@ func GetHeadlessSvcName[T client.Object](obj T) string {
 	return obj.GetName() + hSvcSuffix
 }
 
-func GetSvcName[T client.Object](obj T) string {
+func GetDiscoverySvcName[T client.Object](obj T) string {
 	return obj.GetName() + svcSuffix
 }
 
