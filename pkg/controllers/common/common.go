@@ -285,3 +285,12 @@ func GetNamespace(obj client.Object) string {
 func GetDiscoveryAdr(obj client.Object) string {
 	return fmt.Sprintf("%s.%s.svc", GetDiscoverySvcName(obj), GetNamespace(obj))
 }
+
+// GetLocalFilesService  get local file service config
+func GetLocalFilesService() map[string]interface{} {
+	return map[string]interface{}{
+		"name":     LocalService,
+		"backend":  FileBackendType,
+		"data-dir": DataPath,
+	}
+}

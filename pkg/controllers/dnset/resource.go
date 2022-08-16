@@ -79,7 +79,8 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	conf.Set([]string{"service-type"}, common.DNService)
 	conf.Set([]string{"dn", "listen-address"}, getListenAddress())
-	conf.Set([]string{"fileservice"}, GetLocalFilesService())
+	conf.Set([]string{"fileservice"}, common.GetLocalFilesService())
+	conf.Set([]string{"dn", "Txn", "Storage"}, getTxnStorageConfig(dn))
 	conf.Set([]string{"dn", "HaKeeper", "discovery-address"}, getHaKeeperDiscoveryAddr())
 	s, err := conf.ToString()
 	if err != nil {
@@ -127,10 +128,12 @@ func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
 	}
 }
 
-func GetLocalFilesService() map[string]interface{} {
+func getTxnStorageConfig(dn *v1alpha1.DNSet) map[string]interface{} {
+	if *dn.Spec.InitialConfig.StorageBackend == string(common.TAEEngine) {
+		return map[string]interface{}{}
+	}
+
 	return map[string]interface{}{
-		"name":     common.LocalService,
-		"backend":  common.FileBackendType,
-		"data-dir": common.DataPath,
+		"backend": common.MemoryEngine,
 	}
 }
