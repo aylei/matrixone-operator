@@ -48,7 +48,9 @@ const (
 	MemoryEngine BackendType = "MEM"
 	TAEEngine    BackendType = "TAE"
 
-	HakapeerPort = 32001
+	HakeeperPort  = 32001
+	DNServicePort = 41010
+	CNServicePort = 6001
 
 	InstanceLabelKey  = "matrixorigin.io/instance"
 	ComponentLabelKey = "matrixorigin.io/component"
@@ -171,7 +173,7 @@ func getDiscoverySvcObjMeta(obj client.Object) metav1.ObjectMeta {
 	}
 }
 
-// GetHeadlessService return k8s headless service
+// GetHeadlessService create a headless service
 // https://kubernetes.io/docs/concepts/services-networking/service/#headless-services
 func GetHeadlessService(obj client.Object, ports []corev1.ServicePort) *corev1.Service {
 	return &corev1.Service{
@@ -185,7 +187,7 @@ func GetHeadlessService(obj client.Object, ports []corev1.ServicePort) *corev1.S
 
 }
 
-// GetDiscoveryService return k8s service
+// GetDiscoveryService create a service with suffix "-discovery"
 // https://kubernetes.io/docs/concepts/services-networking/service
 func GetDiscoveryService(
 	obj client.Object, ports []corev1.ServicePort, serviceType corev1.ServiceType) *corev1.Service {
@@ -200,7 +202,7 @@ func GetDiscoveryService(
 	}
 }
 
-// GetObjMeta return k8s object metadata
+// GetObjMeta get object metadata
 func GetObjMeta[T client.Object](obj T) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:        GetName(obj),
@@ -210,7 +212,7 @@ func GetObjMeta[T client.Object](obj T) metav1.ObjectMeta {
 	}
 }
 
-// GetCloneSet return kruise clone set object
+// GetCloneSet get a kruise clone set object
 func GetCloneSet(obj client.Object) *kruise.CloneSet {
 	return &kruise.CloneSet{
 		ObjectMeta: GetObjMeta(obj),
@@ -225,6 +227,7 @@ func GetCloneSet(obj client.Object) *kruise.CloneSet {
 	}
 }
 
+// GetPersistentVolumeClaim return persistent volume claim object
 func GetPersistentVolumeClaim(size resource.Quantity, sc *string) corev1.PersistentVolumeClaim {
 	return corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
@@ -242,22 +245,27 @@ func GetPersistentVolumeClaim(size resource.Quantity, sc *string) corev1.Persist
 	}
 }
 
+// GetHeadlessSvcName get headless service name
 func GetHeadlessSvcName(obj client.Object) string {
 	return obj.GetName() + hSvcSuffix
 }
 
+// GetDiscoverySvcName get service name
 func GetDiscoverySvcName(obj client.Object) string {
 	return obj.GetName() + svcSuffix
 }
 
+// GetConfigName get configmap name
 func GetConfigName(obj client.Object) string {
 	return obj.GetName() + configSuffix
 }
 
+// GetName get object name
 func GetName(obj client.Object) string {
 	return obj.GetName()
 }
 
+// GetNamespace get object namespace
 func GetNamespace(obj client.Object) string {
 	return obj.GetNamespace()
 }

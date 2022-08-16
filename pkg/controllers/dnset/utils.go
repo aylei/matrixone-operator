@@ -15,14 +15,15 @@
 package dnset
 
 import (
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	corev1 "k8s.io/api/core/v1"
 )
 
 func getDNServicePort() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name: "service",
-			Port: servicePort,
+			Name: dnPortName,
+			Port: common.DNServicePort,
 		},
 	}
 }

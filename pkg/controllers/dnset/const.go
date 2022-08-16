@@ -15,5 +15,5 @@
 package dnset
 
 const (
-	servicePort = 41010
+	dnPortName = "dn-service"
 )
