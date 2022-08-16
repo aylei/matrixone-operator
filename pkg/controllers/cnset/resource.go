@@ -19,89 +19,27 @@ import (
 
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func buildHeadlessSvc(cn *v1alpha1.CNSet) *corev1.Service {
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: utils.GetNamespace(cn),
-			Name:      utils.GetHeadlessSvcName(cn),
-			Labels:    common.SubResourceLabels(cn),
-		},
-
-		Spec: corev1.ServiceSpec{
-			ClusterIP: corev1.ClusterIPNone,
-			Ports:     getCNServicePort(cn),
-			Selector:  common.SubResourceLabels(cn),
-		},
-	}
-
-	return svc
-
+	return common.GetHeadlessService(cn, getCNServicePort())
 }
 
 func buildSvc(cn *v1alpha1.CNSet) *corev1.Service {
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: utils.GetNamespace(cn),
-			Name:      utils.GetDiscoverySvcName(cn),
-			Labels:    common.SubResourceLabels(cn),
-		},
-
-		Spec: corev1.ServiceSpec{
-			Type:     cn.Spec.ServiceType,
-			Ports:    getCNServicePort(cn),
-			Selector: common.SubResourceLabels(cn),
-		},
-	}
-	return svc
+	return common.GetDiscoveryService(cn, getCNServicePort(), cn.Spec.ServiceType)
 }
 
 func buildCNSet(cn *v1alpha1.CNSet) *kruise.CloneSet {
-	cnCloneSet := &kruise.CloneSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: utils.GetNamespace(cn),
-			Name:      utils.GetName(cn),
-		},
-		Spec: kruise.CloneSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: common.SubResourceLabels(cn),
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:        utils.GetName(cn),
-					Namespace:   utils.GetNamespace(cn),
-					Labels:      common.SubResourceLabels(cn),
-					Annotations: map[string]string{},
-				},
-			},
-		},
-	}
-	return cnCloneSet
+	return common.GetCloneSet(cn)
 }
 
 func syncPersistentVolumeClaim(cn *v1alpha1.CNSet, cloneSet *kruise.CloneSet) {
-	dataPVC := corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: dataVolume,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-			Resources: corev1.ResourceRequirements{
-				Requests: map[corev1.ResourceName]resource.Quantity{
-					corev1.ResourceStorage: cn.Spec.CacheVolume.Size,
-				},
-			},
-			StorageClassName: cn.Spec.CacheVolume.StorageClassName,
-		},
-	}
+	dataPVC := common.GetPersistentVolumeClaim(cn.Spec.CacheVolume.Size, cn.Spec.CacheVolume.StorageClassName)
 	tpls := []corev1.PersistentVolumeClaim{dataPVC}
 	cn.Spec.Overlay.AppendVolumeClaims(&tpls)
 	cloneSet.Spec.VolumeClaimTemplates = tpls
@@ -132,7 +70,7 @@ func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
 			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
 			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
 			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
-			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(cn)},
+			{Name: common.HeadlessSvcEnvKey, Value: common.GetHeadlessSvcName(cn)},
 		},
 	}
 	cn.Spec.Overlay.OverlayMainContainer(&main)
@@ -152,18 +90,7 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 	dsCfg := cn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/dnservice/cfg.go
 	if dsCfg == nil {
-		dsCfg = v1alpha1.NewTomlConfig(map[string]interface{}{
-			"service-type":   common.CNService,
-			"listen-address": ListenAddress,
-			"file-service": map[string]interface{}{
-				"backend": "s3",
-				"s3": map[string]interface{}{
-					"endpoint":   "",
-					"bucket":     "",
-					"key-prefix": "",
-				},
-			},
-		})
+		dsCfg = v1alpha1.NewTomlConfig(map[string]interface{}{})
 	}
 	s, err := dsCfg.ToString()
 	if err != nil {
@@ -172,8 +99,8 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      utils.GetConfigName(cn),
-			Namespace: utils.GetNamespace(cn),
+			Name:      common.GetConfigName(cn),
+			Namespace: common.GetNamespace(cn),
 			Labels:    common.SubResourceLabels(cn),
 		},
 		Data: map[string]string{

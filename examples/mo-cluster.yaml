@@ -20,8 +20,6 @@ spec:
         path: aylei-test/mo-logset
     volume:
       size: 10Gi
-    nodeSelector:
-      arch: amd64
   dn:
     replicas: 2
     initialConfig:

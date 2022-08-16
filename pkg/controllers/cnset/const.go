@@ -15,7 +15,7 @@
 package cnset
 
 const (
-	servicePort   = 1001
+	cnPortName    = "cn-service"
 	ListenAddress = ""
 	configFile    = "cnservice.toml"
 	configVolume  = "config"

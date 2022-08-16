@@ -17,7 +17,6 @@ package cnset
 import (
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -42,15 +41,15 @@ func (c *CNSetActor) Observe(ctx *recon.Context[*v1alpha1.CNSet]) (recon.Action[
 
 	svc := &corev1.Service{}
 	err, foundSvc := util.IsFound(ctx.Get(client.ObjectKey{
-		Namespace: utils.GetNamespace(cn),
-		Name:      utils.GetName(cn)}, svc))
+		Namespace: common.GetNamespace(cn),
+		Name:      common.GetName(cn)}, svc))
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service discovery service")
 	}
 
 	cloneSet := &kruise.CloneSet{}
 	err, foundCs := util.IsFound(ctx.Get(client.ObjectKey{
-		Namespace: utils.GetNamespace(cn), Name: utils.GetName(cn)}, cloneSet))
+		Namespace: common.GetNamespace(cn), Name: common.GetName(cn)}, cloneSet))
 	if err != nil {
 		return nil, errors.Wrap(err, "get dn service cloneset")
 	}
@@ -66,14 +65,14 @@ func (c *CNSetActor) Finalize(ctx *recon.Context[*v1alpha1.CNSet]) (bool, error)
 	cn := ctx.Obj
 
 	objs := []client.Object{&corev1.Service{ObjectMeta: metav1.ObjectMeta{
-		Name: utils.GetHeadlessSvcName(cn),
+		Name: common.GetHeadlessSvcName(cn),
 	}}, &kruise.CloneSet{ObjectMeta: metav1.ObjectMeta{
-		Name: utils.GetName(cn),
+		Name: common.GetName(cn),
 	}}, &corev1.Service{ObjectMeta: metav1.ObjectMeta{
-		Name: utils.GetDiscoverySvcName(cn),
+		Name: common.GetDiscoverySvcName(cn),
 	}}}
 	for _, obj := range objs {
-		obj.SetNamespace(utils.GetNamespace(cn))
+		obj.SetNamespace(common.GetNamespace(cn))
 		if err := util.Ignore(apierrors.IsNotFound, ctx.Delete(obj)); err != nil {
 			return false, err
 		}

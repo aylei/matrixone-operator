@@ -15,15 +15,15 @@
 package cnset
 
 import (
-	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func getCNServicePort(cn *v1alpha1.CNSet) []corev1.ServicePort {
+func getCNServicePort() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name: "service",
-			Port: servicePort,
+			Name: cnPortName,
+			Port: common.CNServicePort,
 		},
 	}
 }
