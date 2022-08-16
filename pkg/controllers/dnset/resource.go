@@ -137,3 +137,13 @@ func getTxnStorageConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 		"backend": common.MemoryEngine,
 	}
 }
+
+func getTxnStorageConfig(dn *v1alpha1.DNSet) map[string]interface{} {
+	if *dn.Spec.InitialConfig.StorageBackend == string(common.TAEEngine) {
+		return map[string]interface{}{}
+	}
+
+	return map[string]interface{}{
+		"backend": common.MemoryEngine,
+	}
+}
