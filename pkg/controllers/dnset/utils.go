@@ -58,19 +58,6 @@ func getDNAnnotation(dn *v1alpha1.DNSet) map[string]string {
 	return map[string]string{}
 }
 
-func getHAKeeperClientConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{
-		"service-adress": getServiceAddresses(dn),
-	}
-
-}
-
-func getServiceAddresses(dn *v1alpha1.DNSet) []string {
-	logSet := &v1alpha1.LogSet{}
-	res := GetHaKeeperClientAddressList(logSet)
-	return res
-}
-
 func getFileServiceConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 	return common.FileServiceConfig(dataPath, "lcoal")
 }
