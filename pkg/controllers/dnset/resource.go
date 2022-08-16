@@ -142,28 +142,29 @@ func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
 }
 
 func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
-	dataPVC := corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: dataVolume,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-			Resources: corev1.ResourceRequirements{
-				Requests: map[corev1.ResourceName]resource.Quantity{
-					corev1.ResourceStorage: dn.Spec.CacheVolume.Size,
-				},
+	if dn.Spec.CacheVolume != nil {
+		dataPVC := corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: dataVolume,
 			},
-			StorageClassName: dn.Spec.CacheVolume.StorageClassName,
-		},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+				Resources: corev1.ResourceRequirements{
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						corev1.ResourceStorage: dn.Spec.CacheVolume.Size,
+					},
+				},
+				StorageClassName: dn.Spec.CacheVolume.StorageClassName,
+			},
+		}
+		tpls := []corev1.PersistentVolumeClaim{dataPVC}
+		dn.Spec.Overlay.AppendVolumeClaims(&tpls)
+		cloneSet.Spec.VolumeClaimTemplates = tpls
 	}
-	tpls := []corev1.PersistentVolumeClaim{dataPVC}
-	dn.Spec.Overlay.AppendVolumeClaims(&tpls)
-	cloneSet.Spec.VolumeClaimTemplates = tpls
 }
 
 func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 	cs.Spec.Replicas = &dn.Spec.Replicas
-
 }
 
 func syncPodMeta(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
@@ -183,9 +184,9 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 			{Name: configVolume, ReadOnly: true, MountPath: configPath},
 		},
 		Env: []corev1.EnvVar{
-			util.FieldRefEnv(PodNameEnvKey, "metadata.name"),
+			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
 			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
-			util.FieldRefEnv(PodIPEnvKey, "status.podIP"),
+			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
 			{Name: common.HeadlessSvcEnvKey, Value: utils.GetHeadlessSvcName(dn)},
 		},
 	}
@@ -210,9 +211,8 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 		conf = v1alpha1.NewTomlConfig(map[string]interface{}{})
 	}
 
-	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/cnservice/types.go
 	conf.Set([]string{"service-type"}, common.DNService)
-	conf.Set([]string{"dn", "Txn.Storage", "Storage"}, getStorageConfig(dn))
+	conf.Set([]string{"dn", "Txn", "Storage"}, getStorageConfig(dn))
 	conf.Set([]string{"fileservice", "name"}, "s3")
 	conf.Set([]string{"fileservice", "name"}, "test")
 	conf.Set([]string{"dn", "hakeeper-client", "service-addresses"}, getHaKeeperAdds(dn))
@@ -229,7 +229,7 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: dn.Namespace,
-			Name:      utils.GetName(dn),
+			Name:      utils.GetConfigName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 		Data: map[string]string{
@@ -237,7 +237,4 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 			Entrypoint: buff.String(),
 		},
 	}, nil
-}
-
-type FileServie struct {
 }

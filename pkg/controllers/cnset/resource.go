@@ -153,33 +153,21 @@ func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
 }
 
 func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
-	configMapName := utils.GetConfigName(cn)
 	dsCfg := cn.Spec.Config
 	// detail: https://github.com/matrixorigin/matrixone/blob/main/pkg/dnservice/cfg.go
 	if dsCfg == nil {
 		dsCfg = v1alpha1.NewTomlConfig(map[string]interface{}{
 			"service-type":   common.CNService,
-			"listen-address": listenAddress,
-			"log": map[string]interface{}{
-				"level":    logLevel,
-				"format":   logFormatType,
-				"max-size": logMaxSize,
-			},
+			"listen-address": ListenAddress,
 			"file-service": map[string]interface{}{
-				"backend": backendType,
+				"backend": "s3",
 				"s3": map[string]interface{}{
 					"endpoint":   "",
 					"bucket":     "",
 					"key-prefix": "",
 				},
 			},
-			"pipeline": map[string]interface{}{
-				"host-size":     hostSize,
-				"guest-size":    guestSize,
-				"operator-size": operatorSize,
-				"batch-row":     batchRow,
-				"batch-size":    batchSize,
-			},
+			"pipeline": getPipelineConifg(cn),
 		})
 	}
 	s, err := dsCfg.ToString()
@@ -189,7 +177,7 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      configMapName,
+			Name:      utils.GetConfigName(cn),
 			Namespace: utils.GetNamespace(cn),
 			Labels:    common.SubResourceLabels(cn),
 		},

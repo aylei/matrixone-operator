@@ -15,19 +15,27 @@ import (
 
 type FileType string
 type ServiceType string
+type BackendType string
 
 const (
 	PodNameEnvKey     = "POD_NAME"
 	HeadlessSvcEnvKey = "HEADLESS_SERVICE_NAME"
 	NamespaceEnvKey   = "NAMESPACE"
 	PodIPEnvKey       = "POD_IP"
+	ListenIP          = "0.0.0.0"
 
 	DNService ServiceType = "DN"
 	CNService ServiceType = "CN"
 
 	S3Service    FileType = "s3"
+	LocalService FileType = "local"
 	MinioService FileType = "minio"
 	NFSService   FileType = "nfs"
+
+	MemoryEngine BackendType = "MEM"
+	TAEEngine    BackendType = "TAE"
+
+	HakepeerPort = 32001
 
 	InstanceLabelKey  = "matrixorigin.io/instance"
 	ComponentLabelKey = "matrixorigin.io/component"
@@ -115,18 +123,18 @@ func addConfigMapDigest(cm *corev1.ConfigMap) error {
 	return nil
 }
 
-// FileServiceConfig config common file service(local, s3 etc.) for all components
+// FileServiceConfig config common file service(local, s3 etc.) for all sets
 func FileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
 
 	switch fsType {
-	case "local":
+	case string(LocalService):
 		// local file service
 		res = map[string]interface{}{
 			"name":     fsType,
-			"backend":  "DISK",
+			"backend":  LocalService,
 			"data-dir": fsPath,
 		}
-	case "s3":
+	case string(S3Service):
 	}
 
 	return res

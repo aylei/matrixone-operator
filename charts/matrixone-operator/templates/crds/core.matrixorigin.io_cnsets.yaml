@@ -104,12 +104,26 @@ spec:
                 type: string
               initialConfig:
                 properties:
-                  apAvailable:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    description: TPAvailable maximum ap set is available kubebuilder:default=0
-                    x-kubernetes-int-or-string: true
+                  batchRows:
+                    description: BatchRows is the batch rows limit for one batch
+                    format: int64
+                    type: integer
+                  batchSize:
+                    description: BatchSize is the memory limit for one batch
+                    format: int64
+                    type: integer
+                  guestSize:
+                    description: GuestSize is the memory limit for one query
+                    format: int64
+                    type: integer
+                  hostSize:
+                    description: HostSize is the memory limit
+                    format: int64
+                    type: integer
+                  operatorSize:
+                    description: OperatorSize is the memory limit for one operator
+                    format: int64
+                    type: integer
                 type: object
               lifecycle:
                 description: Lifecycle defines the lifecycle hooks for Pods pre-delete,

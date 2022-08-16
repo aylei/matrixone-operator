@@ -4,7 +4,6 @@ import (
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type CNSetSpec struct {
@@ -17,7 +16,7 @@ type CNSetSpec struct {
 type CNSetBasic struct {
 	PodSet `json:",inline"`
 
-	// CloneSetCommon kruise clone set common config for cnset
+	// CloneSetCommon kruise clone set common config for cn set
 	// +optional
 	CloneSetCommon `json:",inline"`
 
@@ -48,10 +47,29 @@ type CNSetBasic struct {
 }
 
 type CNInitialConfig struct {
-	// TPAvailable maximum ap set is available
+	PipelineConfig `json:",inline"`
+}
+
+type PipelineConfig struct {
+	// HostSize is the memory limit
 	// +optional
-	// kubebuilder:default=0
-	APAvailable *intstr.IntOrString `json:"apAvailable,omitempty"`
+	HostSize int64 `json:"hostSize,omitempty"`
+
+	// GuestSize is the memory limit for one query
+	// +optional
+	GuestSize int64 `json:"guestSize,omitempty"`
+
+	// OperatorSize is the memory limit for one operator
+	// +optional
+	OperatorSize int64 `json:"operatorSize,omitempty"`
+
+	// BatchRows is the batch rows limit for one batch
+	// +optional
+	BatchRows int64 `json:"batchRows,omitempty"`
+
+	// BatchSize is the memory limit for one batch
+	// +optional
+	BatchSize int64 `json:"batchSize,omitempty"`
 }
 
 // TODO: figure out what status should be exposed

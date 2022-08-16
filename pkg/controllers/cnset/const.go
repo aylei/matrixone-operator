@@ -16,20 +16,11 @@ package cnset
 
 const (
 	servicePort   = 1001
-	listenAddress = ""
-	logLevel      = "debug"
+	ListenAddress = ""
 	configFile    = "cnservice.toml"
-	logFormatType = "json"
-	logMaxSize    = "512"
-	backendType   = "s3"
-	hostSize      = 1000
-	guestSize     = 2000
-	operatorSize  = 3000
 	configVolume  = "config"
 	dataVolume    = "cndata"
 	configPath    = "/etc/cnservice"
 	Entrypoint    = "start.sh"
 	dataPath      = "/var/lib/cnservice"
-	batchRow      = 300
-	batchSize     = 400
 )

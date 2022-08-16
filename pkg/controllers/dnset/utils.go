@@ -18,26 +18,12 @@ import (
 	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func getDNServiceConfig(dn *v1alpha1.DNSet) *v1alpha1.TomlConfig {
-	dsCfg := v1alpha1.NewTomlConfig(map[string]interface{}{
-		"service-type":                "DN",
-		"log":                         getLogConfig(dn),
-		"fileservice":                 getFileServiceConfig(dn),
-		"dn":                          getDNMetaConfig(dn),
-		"dn.Txn.Storage":              getEngineConfig(dn),
-		"dn.HAKeeper.hakeeper-client": getHAKeeperClientConfig(dn),
-	})
-
-	return dsCfg
-}
 
 func getScaleStrategyConfig(dn *v1alpha1.DNSet) kruise.CloneSetScaleStrategy {
 	return kruise.CloneSetScaleStrategy{
@@ -95,7 +81,7 @@ func getLogConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 
 func getDNMetaConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 	return map[string]interface{}{
-		"listen-address":  fmt.Sprintf("%s:%d", ListenIP, servicePort),
+		"listen-address":  fmt.Sprintf("%s:%d", common.ListenIP, servicePort),
 		"service-address": fmt.Sprintf("%s:%d", getPodIP(), servicePort),
 	}
 }
@@ -107,11 +93,11 @@ func getEngineConfig(dn *v1alpha1.DNSet) map[string]interface{} {
 }
 
 func getPodIP() string {
-	return util.FieldRefEnv(PodIPEnvKey, "status.podIP").Value
+	return util.FieldRefEnv(common.PodIPEnvKey, "status.podIP").Value
 }
 
 func getPodName() string {
-	return util.FieldRefEnv(PodNameEnvKey, "metadata.name").Value
+	return util.FieldRefEnv(common.PodNameEnvKey, "metadata.name").Value
 }
 
 func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
@@ -123,40 +109,12 @@ func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
 	}
 }
 
-func GetHaKeeperClientAddressList(lg *v1alpha1.LogSet) []string {
-	var numOfHa int
-
-	if lg.Spec.Replicas >= 3 {
-		numOfHa = 3
-	} else {
-		numOfHa = int(lg.Spec.Replicas)
-	}
-
-	var res []string
-	for k := 0; k < numOfHa; k++ {
-		addr := fmt.Sprintf("%s.%s.%s.svc.cluster.local",
-			lg.Name+"-"+string(rune(k)),
-			utils.GetHeadlessSvcName(lg),
-			lg.Namespace)
-		res = append(res, fmt.Sprintf("%s:%s", addr, fmt.Sprint(logset.LogServicePort)))
-	}
-
-	return res
-}
-
 func getSharedStorageConfig() map[string]interface{} {
 	return map[string]interface{}{}
 }
 
 func getLocalStorageConfig() map[string]interface{} {
 	return common.FileServiceConfig(dataPath, "local")
-}
-
-func getHaKeeperAdds(dn *v1alpha1.DNSet) []string {
-	ls := &v1alpha1.LogSet{}
-	adr := GetHaKeeperClientAddressList(ls)
-
-	return adr
 }
 
 func getStorageConfig(dn *v1alpha1.DNSet) []string {

@@ -24,13 +24,17 @@ import (
 type MatrixOneClusterSpec struct {
 	// TP is the default CN pod set that accepts client connections and execute queries
 	// +required
-	CN CNSetBasic `json:"cn"`
+	TP CNSetBasic `json:"tp"`
+
+	// AP is an optional CN pod set that accept MPP sub-plans to accelerate sql queries
+	// +optionals
+	AP *CNSetBasic `json:"ap,omitempty"`
 
 	// DN is the default DN pod set of this Cluster
 	DN DNSetBasic `json:"dn"`
 
 	// LogService is the default LogService pod set of this cluster
-	LogService LogSetBasic `json:"logService,omitempty"`
+	LogService LogSetBasic `json:"logService"`
 
 	// Version is the version of the cluster, which translated
 	// to the docker image tag used for each component.
@@ -43,6 +47,7 @@ type MatrixOneClusterSpec struct {
 	// registry.
 	// +required
 	ImageRepository string `json:"imageRepository,omitempty"`
+
 	// WebUIEnabled indicates whether deploy the MO web-ui,
 	// default to true.
 	// +optional
@@ -52,9 +57,10 @@ type MatrixOneClusterSpec struct {
 // MatrixOneClusterStatus defines the observed state of MatrixOneCluster
 type MatrixOneClusterStatus struct {
 	ConditionalStatus `json:",inline"`
-	// CN is the CN set status
-	CN *CNSetStatus `json:"tp,omitempty"`
-
+	// TP is the TP set status
+	TP *CNSetStatus `json:"tp,omitempty"`
+	// AP is the AP set status
+	AP *CNSetStatus `json:"ap,omitempty"`
 	// DN is the DN set status
 	DN *DNSetStatus `json:"dn,omitempty"`
 	// LogService is the LogService status
@@ -68,7 +74,8 @@ type MatrixOneClusterStatus struct {
 // +kubebuilder:resource:shortName=mo
 // +kubebuilder:printcolumn:name="Log",type="integer",JSONPath=".spec.logService.replicas"
 // +kubebuilder:printcolumn:name="DN",type="integer",JSONPath=".spec.dn.replicas"
-// +kubebuilder:printcolumn:name="CN",type="integer",JSONPath=".spec.cn.replicas"
+// +kubebuilder:printcolumn:name="TP",type="integer",JSONPath=".spec.tp.replicas"
+// +kubebuilder:printcolumn:name="AP",type="integer",JSONPath=".spec.ap.replicas"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MatrixOneCluster struct {

@@ -48,3 +48,13 @@ func getUpdateStrategyConfig(cn *v1alpha1.CNSet) kruise.CloneSetUpdateStrategy {
 		InPlaceUpdateStrategy: cn.Spec.UpdateStrategy.InPlaceUpdateStrategy,
 	}
 }
+
+func getPipelineConifg(cn *v1alpha1.CNSet) map[string]interface{} {
+	return map[string]interface{}{
+		"host-size":     cn.Spec.InitialConfig.HostSize,
+		"guest-size":    cn.Spec.InitialConfig.GuestSize,
+		"operator-size": cn.Spec.InitialConfig.OperatorSize,
+		"batch-row":     cn.Spec.InitialConfig.BatchRows,
+		"batch-size":    cn.Spec.InitialConfig.BatchSize,
+	}
+}

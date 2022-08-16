@@ -10,11 +10,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &MatrixoneClusterActor{}
+var _ recon.Actor[*v1alpha1.MatrixOneCluster] = &MatrixOneClusterActor{}
 
-type MatrixoneClusterActor struct{}
+type MatrixOneClusterActor struct{}
 
-func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (recon.Action[*v1alpha1.MatrixOneCluster], error) {
+func (r *MatrixOneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (recon.Action[*v1alpha1.MatrixOneCluster], error) {
 	mo := ctx.Obj
 
 	// sync specs
@@ -24,8 +24,8 @@ func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCl
 	dn := &v1alpha1.DNSet{
 		ObjectMeta: dnSetKey(mo),
 	}
-	cn := &v1alpha1.CNSet{
-		ObjectMeta: cnSetKey(mo),
+	tp := &v1alpha1.CNSet{
+		ObjectMeta: tpSetKey(mo),
 	}
 	errs := multierr.Combine(
 		recon.CreateOwnedOrUpdate(ctx, ls, func() error {
@@ -35,36 +35,35 @@ func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCl
 		}),
 		recon.CreateOwnedOrUpdate(ctx, dn, func() error {
 			dn.Spec.DNSetBasic = mo.Spec.DN
-			dn.Spec.Image = mo.DNSetImage()
+			dn.Spec.Image = mo.DnSetImage()
 			return nil
 		}),
-		recon.CreateOwnedOrUpdate(ctx, cn, func() error {
-			cn.Spec.CNSetBasic = mo.Spec.CN
-			cn.Spec.Image = mo.CNSetImage()
+		recon.CreateOwnedOrUpdate(ctx, tp, func() error {
+			tp.Spec.CNSetBasic = mo.Spec.TP
+			tp.Spec.Image = mo.TpSetImage()
 			return nil
 		}),
 	)
+	if mo.Spec.AP != nil {
+		ap := &v1alpha1.CNSet{
+			ObjectMeta: apSetKey(mo),
+		}
+		errs = multierr.Append(errs, recon.CreateOwnedOrUpdate(ctx, ap, func() error {
+			ap.Spec.CNSetBasic = *mo.Spec.AP
+			ap.Spec.Image = mo.ApSetImage()
+			return nil
+		}))
+		mo.Status.AP = &ap.Status
+	}
 	if errs != nil {
 		return nil, errs
 	}
 
-	//if mo.Spec.AP != nil {
-	//	ap := &v1alpha1.CNSet{
-	//		ObjectMeta: apSetKey(mo),
-	//	}
-	//	errs = multierr.Append(errs, recon.CreateOwnedOrUpdate(ctx, ap, func() error {
-	//		ap.Spec.CNSetBasic = *mo.Spec.AP
-	//		ap.Spec.Image = mo.ApSetImage()
-	//		return nil
-	//	}))
-	//	mo.Status.AP = &ap.Status
-	//}
-
 	// collect status
 	mo.Status.LogService = &ls.Status
 	mo.Status.DN = &dn.Status
-	mo.Status.CN = &cn.Status
-	if mo.Status.CN.Ready() {
+	mo.Status.TP = &tp.Status
+	if mo.Status.TP.Ready() {
 		mo.Status.ConditionalStatus.SetCondition(metav1.Condition{
 			Type:   v1alpha1.ConditionTypeReady,
 			Status: metav1.ConditionTrue,
@@ -74,12 +73,13 @@ func (r *MatrixoneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCl
 	return nil, nil
 }
 
-func (r *MatrixoneClusterActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
+func (r *MatrixOneClusterActor) Finalize(ctx *recon.Context[*v1alpha1.MatrixOneCluster]) (bool, error) {
 	mo := ctx.Obj
 	objs := []client.Object{
 		&v1alpha1.LogSet{ObjectMeta: logSetKey(mo)},
 		&v1alpha1.DNSet{ObjectMeta: dnSetKey(mo)},
-		&v1alpha1.CNSet{ObjectMeta: cnSetKey(mo)},
+		&v1alpha1.CNSet{ObjectMeta: tpSetKey(mo)},
+		&v1alpha1.CNSet{ObjectMeta: apSetKey(mo)},
 	}
 	existAny := false
 	for _, obj := range objs {
@@ -111,9 +111,16 @@ func dnSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	}
 }
 
-func cnSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
+func tpSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
 		Name:      mo.Name + "-cn",
+		Namespace: mo.Namespace,
+	}
+}
+
+func apSetKey(mo *v1alpha1.MatrixOneCluster) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      mo.Name + "-ap",
 		Namespace: mo.Namespace,
 	}
 }

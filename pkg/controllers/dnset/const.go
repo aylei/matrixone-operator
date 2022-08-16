@@ -15,14 +15,11 @@
 package dnset
 
 const (
-	dataVolume    = "dndata"
-	dataPath      = "/var/lib/dnservice"
-	configVolume  = "config"
-	configPath    = "/etc/dnservice"
-	PodNameEnvKey = "POD_NAME"
-	servicePort   = 41010
-	ListenIP      = "0.0.0.0"
-	PodIPEnvKey   = "POD_IP"
-	ConfigFile    = "dnservice.toml"
-	Entrypoint    = "start.sh"
+	dataVolume   = "dndata"
+	dataPath     = "/var/lib/dnservice"
+	configVolume = "config"
+	configPath   = "/etc/dnservice"
+	servicePort  = 41010
+	ConfigFile   = "dnservice.toml"
+	Entrypoint   = "start.sh"
 )

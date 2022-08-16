@@ -113,7 +113,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	moActor := &mocluster.MatrixoneClusterActor{}
+	moActor := &mocluster.MatrixOneClusterActor{}
 	if err := recon.Setup[*v1alpha1.MatrixOneCluster](&v1alpha1.MatrixOneCluster{}, "matrixonecluster", mgr, moActor,
 		recon.WithBuildFn(func(b *builder.Builder) {
 			b.Owns(&v1alpha1.LogSet{}).

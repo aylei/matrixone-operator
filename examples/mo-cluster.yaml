@@ -26,9 +26,7 @@ spec:
       storageBackend: "MEM"
     cacheVolume:
       size: 10Gi
-  cn:
+  tp:
     replicas: 2
-    initialConfig:
-      apAvailable: 1
     cacheVolume:
       size: 10Gi
