@@ -24,93 +24,8 @@ import (
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// buildHeadlessSvc build the initial headless service object for the given dnset
-func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: utils.GetNamespace(dn),
-			Name:      utils.GetHeadlessSvcName(dn),
-			Labels:    common.SubResourceLabels(dn),
-		},
-
-		Spec: corev1.ServiceSpec{
-			ClusterIP: corev1.ClusterIPNone,
-			Ports:     getDNServicePort(dn),
-			Selector:  common.SubResourceLabels(dn),
-		},
-	}
-
-	return svc
-}
-
-// buildSvc build dn pod service
-func buildSvc(dn *v1alpha1.DNSet) *corev1.Service {
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dn.Namespace,
-			Name:      utils.GetDiscoverySvcName(dn),
-			Labels:    common.SubResourceLabels(dn),
-		},
-
-		Spec: corev1.ServiceSpec{
-			Type:     dn.Spec.ServiceType,
-			Ports:    getDNServicePort(dn),
-			Selector: common.SubResourceLabels(dn),
-		},
-	}
-	return svc
-}
-
-// buildDNSet return kruise CloneSet as dn resource
-func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
-	dnCloneSet := &kruise.CloneSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dn.Namespace,
-			Name:      dn.Name,
-		},
-		Spec: kruise.CloneSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: common.SubResourceLabels(dn),
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:        dn.Name,
-					Namespace:   dn.Namespace,
-					Labels:      common.SubResourceLabels(dn),
-					Annotations: map[string]string{},
-				},
-			},
-		},
-	}
-
-	return dnCloneSet
-}
-
-func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
-	if dn.Spec.CacheVolume != nil {
-		dataPVC := corev1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: dataVolume,
-			},
-			Spec: corev1.PersistentVolumeClaimSpec{
-				AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-				Resources: corev1.ResourceRequirements{
-					Requests: map[corev1.ResourceName]resource.Quantity{
-						corev1.ResourceStorage: dn.Spec.CacheVolume.Size,
-					},
-				},
-				StorageClassName: dn.Spec.CacheVolume.StorageClassName,
-			},
-		}
-		tpls := []corev1.PersistentVolumeClaim{dataPVC}
-		dn.Spec.Overlay.AppendVolumeClaims(&tpls)
-		cloneSet.Spec.VolumeClaimTemplates = tpls
-	}
-}
 
 func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 	cs.Spec.Replicas = &dn.Spec.Replicas
@@ -126,11 +41,11 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 		Image:     dn.Spec.Image,
 		Resources: dn.Spec.Resources,
 		Command: []string{
-			"/bin/sh", fmt.Sprintf("%s/%s", configPath, Entrypoint),
+			"/bin/sh", fmt.Sprintf("%s/%s", common.ConfigPath, Entrypoint),
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			{Name: dataVolume, ReadOnly: true, MountPath: dataPath},
-			{Name: configVolume, ReadOnly: true, MountPath: configPath},
+			{Name: common.DataVolume, ReadOnly: true, MountPath: common.DataPath},
+			{Name: common.ConfigVolume, ReadOnly: true, MountPath: common.ConfigPath},
 		},
 		Env: []corev1.EnvVar{
 			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
@@ -156,22 +71,45 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	buff := new(bytes.Buffer)
-	err := startScriptTpl.Execute(buff, &model{
-		ConfigFilePath: fmt.Sprintf("%s/%s", configPath, ConfigFile),
-	})
-	if err != nil {
-		panic(err)
-	}
+	//err := startScriptTpl.Execute(buff, &model{
+	//	ConfigFilePath: fmt.Sprintf("%s/%s", configPath, ConfigFile),
+	//})
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: dn.Namespace,
+			Namespace: utils.GetNamespace(dn),
 			Name:      utils.GetConfigName(dn),
 			Labels:    common.SubResourceLabels(dn),
 		},
 		Data: map[string]string{
-			ConfigFile: s,
+			//ConfigFile: s,
 			Entrypoint: buff.String(),
 		},
 	}, nil
+}
+
+func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
+	ports := getDNServicePort()
+	return common.GetHeadlessService(dn, ports)
+}
+
+func buildDiscoverySvc(dn *v1alpha1.DNSet) *corev1.Service {
+	ports := getDNServicePort()
+	return common.GetDiscoveryService(dn, ports, dn.Spec.ServiceType)
+}
+
+func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
+	return common.GetCloneSet(dn)
+}
+
+func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
+	if dn.Spec.CacheVolume != nil {
+		dataPVC := common.GetPersistentVolumeClaim(dn.Spec.CacheVolume.Size, dn.Spec.CacheVolume.StorageClassName)
+		tpls := []corev1.PersistentVolumeClaim{dataPVC}
+		dn.Spec.Overlay.AppendVolumeClaims(&tpls)
+		cloneSet.Spec.VolumeClaimTemplates = tpls
+	}
 }

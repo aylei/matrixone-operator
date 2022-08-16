@@ -37,7 +37,7 @@ UUID=$(printf '00000000-0000-0000-0000-%012x' ${ORDINAL})
 conf=$(mktemp)
 
 bc=$(mktemp)
-cat <<EOF > ${bc}
+cat <<EOF > ${bc}[
 uuid = "${UUID}"
 raft-address = "${ADDR}:{{ .RaftPort }}"
 logservice-address = "${ADDR}:{{ .LogServicePort }}"

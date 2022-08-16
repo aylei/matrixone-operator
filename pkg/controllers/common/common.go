@@ -3,14 +3,16 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
-
 	"github.com/cespare/xxhash"
+	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
+	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -24,6 +26,12 @@ const (
 	NamespaceEnvKey   = "NAMESPACE"
 	PodIPEnvKey       = "POD_IP"
 	ListenIP          = "0.0.0.0"
+
+	DataPath     = "/var/lib/matrixone/data"
+	DataVolume   = "data"
+	ConfigVolume = "config"
+	ConfigPath   = "/etc/matrixone/config"
+	configFile   = "config.toml"
 
 	DNService ServiceType = "DN"
 	CNService ServiceType = "CN"
@@ -141,7 +149,85 @@ func FileServiceConfig(fsPath, fsType string) (res map[string]interface{}) {
 	return res
 }
 
-func GetHaKepeerDiscoveryAddress(ls *v1alpha1.LogSet) string {
+func getHeadlessSvcObjMeta(obj client.Object) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:        utils.GetHeadlessSvcName(obj),
+		Namespace:   utils.GetNamespace(obj),
+		Annotations: map[string]string{},
+		Labels:      SubResourceLabels(obj),
+	}
+}
 
-	return ""
+func getDiscoverySvcObjMeta(obj client.Object) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:        utils.GetDiscoverySvcName(obj),
+		Namespace:   utils.GetNamespace(obj),
+		Labels:      SubResourceLabels(obj),
+		Annotations: map[string]string{},
+	}
+}
+
+func GetHeadlessService(obj client.Object, ports []corev1.ServicePort) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: getHeadlessSvcObjMeta(obj),
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Ports:     ports,
+			Selector:  SubResourceLabels(obj),
+		},
+	}
+
+}
+
+func GetDiscoveryService(
+	obj client.Object, ports []corev1.ServicePort, serviceType corev1.ServiceType) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: getDiscoverySvcObjMeta(obj),
+
+		Spec: corev1.ServiceSpec{
+			Type:     serviceType,
+			Ports:    ports,
+			Selector: SubResourceLabels(obj),
+		},
+	}
+}
+
+func GetObjMeta[T client.Object](obj T) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:        utils.GetName(obj),
+		Namespace:   utils.GetNamespace(obj),
+		Annotations: map[string]string{},
+		Labels:      SubResourceLabels(obj),
+	}
+}
+
+func GetCloneSet(obj client.Object) *kruise.CloneSet {
+	return &kruise.CloneSet{
+		ObjectMeta: GetObjMeta(obj),
+		Spec: kruise.CloneSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: SubResourceLabels(obj),
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: GetObjMeta(obj),
+			},
+		},
+	}
+}
+
+func GetPersistentVolumeClaim(size resource.Quantity, sc *string) corev1.PersistentVolumeClaim {
+	return corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: DataVolume,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					corev1.ResourceStorage: size,
+				},
+			},
+			StorageClassName: sc,
+		},
+	}
 }

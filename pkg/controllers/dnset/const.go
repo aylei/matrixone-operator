@@ -15,11 +15,6 @@
 package dnset
 
 const (
-	dataVolume   = "dndata"
-	dataPath     = "/var/lib/dnservice"
-	configVolume = "config"
-	configPath   = "/etc/dnservice"
-	servicePort  = 41010
-	ConfigFile   = "dnservice.toml"
-	Entrypoint   = "start.sh"
+	servicePort = 41010
+	Entrypoint  = "start.sh"
 )

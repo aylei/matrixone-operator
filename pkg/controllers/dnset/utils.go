@@ -15,74 +15,14 @@
 package dnset
 
 import (
-	"fmt"
-	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
-	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
-	"github.com/matrixorigin/matrixone-operator/pkg/utils"
-	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func getDNObjMetaConfig(dn *v1alpha1.DNSet) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
-		Name:        utils.GetName(dn),
-		Namespace:   utils.GetNamespace(dn),
-		Labels:      common.SubResourceLabels(dn),
-		Annotations: getDNAnnotation(dn),
-	}
-}
-
-func getDNAnnotation(dn *v1alpha1.DNSet) map[string]string {
-	return map[string]string{}
-}
-
-func getFileServiceConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return common.FileServiceConfig(dataPath, "lcoal")
-}
-
-func getLogConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-func getDNMetaConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{
-		"listen-address":  fmt.Sprintf("%s:%d", common.ListenIP, servicePort),
-		"service-address": fmt.Sprintf("%s:%d", getPodIP(), servicePort),
-	}
-}
-
-func getEngineConfig(dn *v1alpha1.DNSet) map[string]interface{} {
-	return map[string]interface{}{
-		"backend": dn.Spec.InitialConfig.StorageBackend,
-	}
-}
-
-func getPodIP() string {
-	return util.FieldRefEnv(common.PodIPEnvKey, "status.podIP").Value
-}
-
-func getPodName() string {
-	return util.FieldRefEnv(common.PodNameEnvKey, "metadata.name").Value
-}
-
-func getDNServicePort(dn *v1alpha1.DNSet) []corev1.ServicePort {
+func getDNServicePort() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
 			Name: "service",
 			Port: servicePort,
 		},
 	}
-}
-
-func getSharedStorageConfig() map[string]interface{} {
-	return map[string]interface{}{}
-}
-
-func getLocalStorageConfig() map[string]interface{} {
-	return common.FileServiceConfig(dataPath, string(common.LocalService))
-}
-
-func getStorageConfig(dn *v1alpha1.DNSet) []string {
-	return []string{}
 }
