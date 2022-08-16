@@ -46,31 +46,7 @@ type CNSetBasic struct {
 	CacheVolume *Volume `json:"cacheVolume,omitempty"`
 }
 
-type CNInitialConfig struct {
-	PipelineConfig `json:",inline"`
-}
-
-type PipelineConfig struct {
-	// HostSize is the memory limit
-	// +optional
-	HostSize int64 `json:"hostSize,omitempty"`
-
-	// GuestSize is the memory limit for one query
-	// +optional
-	GuestSize int64 `json:"guestSize,omitempty"`
-
-	// OperatorSize is the memory limit for one operator
-	// +optional
-	OperatorSize int64 `json:"operatorSize,omitempty"`
-
-	// BatchRows is the batch rows limit for one batch
-	// +optional
-	BatchRows int64 `json:"batchRows,omitempty"`
-
-	// BatchSize is the memory limit for one batch
-	// +optional
-	BatchSize int64 `json:"batchSize,omitempty"`
-}
+type CNInitialConfig struct{}
 
 // TODO: figure out what status should be exposed
 type CNSetStatus struct {

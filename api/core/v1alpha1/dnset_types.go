@@ -17,18 +17,6 @@ type DNSetBasic struct {
 	PodSet    `json:",inline"`
 	LogConfig `json:",inline"`
 
-	// ClonSetCommon kruise clone set common config for cnset
-	// +optional
-	CloneSetCommon `json:",inline"`
-
-	// ScaleStrategy clone set scalestrategy config for dn service
-	// +optional
-	ScaleStrategy CloneSetScaleStrategy `json:"scaleStrategy,omitempty"`
-
-	// Updatestrategy clone set updatestrategy config for dn service
-	// +optional
-	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
-
 	// ServiceType is the service type of dn service
 	// +optional
 	// +kubebuilder:default=ClusterIP
