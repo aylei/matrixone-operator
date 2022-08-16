@@ -28,14 +28,14 @@ const (
 	HeadlessSvcEnvKey = "HEADLESS_SERVICE_NAME"
 	NamespaceEnvKey   = "NAMESPACE"
 	PodIPEnvKey       = "POD_IP"
-	ListenIP          = "0.0.0.0"
 
-	DataPath     = "/var/lib/matrixone/data"
-	DataVolume   = "data"
-	ConfigVolume = "config"
-	ConfigPath   = "/etc/matrixone/config"
-	configFile   = "config.toml"
-	Entrypoint   = "start.sh"
+	DataPath      = "/var/lib/matrixone/data"
+	DataVolume    = "data"
+	ConfigVolume  = "config"
+	ConfigPath    = "/etc/matrixone/config"
+	ConfigFile    = "config.toml"
+	Entrypoint    = "start.sh"
+	ListenAddress = "0.0.0.0"
 
 	DNService ServiceType = "DN"
 	CNService ServiceType = "CN"
@@ -56,6 +56,8 @@ const (
 	ComponentLabelKey = "matrixorigin.io/component"
 	// NamespaceLabelKey is the label key for cluster-scope resources
 	NamespaceLabelKey = "matrixorigin.io/namespace"
+
+	FileBackendType = "DISK"
 )
 
 // SubResourceLabels generate labels for sub-resources
@@ -212,6 +214,15 @@ func GetObjMeta[T client.Object](obj T) metav1.ObjectMeta {
 	}
 }
 
+func GetConfigMapObjMeta(obj client.Object) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:        GetConfigName(obj),
+		Namespace:   GetNamespace(obj),
+		Annotations: map[string]string{},
+		Labels:      SubResourceLabels(obj),
+	}
+}
+
 // GetCloneSet get a kruise clone set object
 func GetCloneSet(obj client.Object) *kruise.CloneSet {
 	return &kruise.CloneSet{
@@ -268,4 +279,9 @@ func GetName(obj client.Object) string {
 // GetNamespace get object namespace
 func GetNamespace(obj client.Object) string {
 	return obj.GetNamespace()
+}
+
+// GetDiscoveryAdr get discovery service address
+func GetDiscoveryAdr(obj client.Object) string {
+	return fmt.Sprintf("%s.%s.svc", GetDiscoverySvcName(obj), GetNamespace(obj))
 }

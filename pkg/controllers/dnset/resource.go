@@ -25,6 +25,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+type model struct {
+	DNServicePort  int
+	ConfigFilePath string
+}
+
 func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 	cs.Spec.Replicas = &dn.Spec.Replicas
 }
@@ -67,19 +72,33 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 
 // buildDNSetConfigMap return dn set configmap
 func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
+	conf := dn.Spec.Config
+	if conf == nil {
+		conf = v1alpha1.NewTomlConfig(map[string]interface{}{})
+	}
+
+	conf.Set([]string{"service-type"}, common.DNService)
+	conf.Set([]string{"dn", "listen-address"}, getListenAddress())
+	conf.Set([]string{"fileservice"}, GetLocalFilesService())
+	conf.Set([]string{"dn", "HaKeeper", "discovery-address"}, getHaKeeperDiscoveryAddr())
+	s, err := conf.ToString()
+	if err != nil {
+		return nil, err
+	}
 
 	buff := new(bytes.Buffer)
-	//err := startScriptTpl.Execute(buff, &model{
-	//	ConfigFilePath: fmt.Sprintf("%s/%s", configPath, ConfigFile),
-	//})
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = startScriptTpl.Execute(buff, &model{
+		DNServicePort:  common.CNServicePort,
+		ConfigFilePath: fmt.Sprintf("%s/%s", common.ConfigPath, common.ConfigFile),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &corev1.ConfigMap{
-		ObjectMeta: common.GetObjMeta(dn),
+		ObjectMeta: common.GetConfigMapObjMeta(dn),
 		Data: map[string]string{
-			//ConfigFile: s,
+			common.ConfigFile: s,
 			common.Entrypoint: buff.String(),
 		},
 	}, nil
@@ -105,5 +124,13 @@ func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
 		tpls := []corev1.PersistentVolumeClaim{dataPVC}
 		dn.Spec.Overlay.AppendVolumeClaims(&tpls)
 		cloneSet.Spec.VolumeClaimTemplates = tpls
+	}
+}
+
+func GetLocalFilesService() map[string]interface{} {
+	return map[string]interface{}{
+		"name":     common.LocalService,
+		"backend":  common.FileBackendType,
+		"data-dir": common.DataPath,
 	}
 }

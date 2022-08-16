@@ -15,6 +15,8 @@
 package dnset
 
 import (
+	"fmt"
+	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -26,4 +28,13 @@ func getDNServicePort() []corev1.ServicePort {
 			Port: common.DNServicePort,
 		},
 	}
+}
+
+func getListenAddress() string {
+	return common.ListenAddress + fmt.Sprint(common.DNServicePort)
+}
+
+func getHaKeeperDiscoveryAddr() string {
+	lg := &v1alpha1.LogSet{}
+	return common.GetDiscoveryAdr(lg)
 }

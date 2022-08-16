@@ -14,6 +14,49 @@
 
 package dnset
 
+import (
+	"text/template"
+)
+
 const (
 	dnPortName = "dn-service"
 )
+
+// dn service entrypoint script
+var startScriptTpl = template.Must(template.New("dn-start-script").Parse(`
+#!/bin/sh
+set -eu
+POD_NAME=${POD_NAME:-$HOSTNAME}
+ADDR="${POD_NAME}.${HEADLESS_SERVICE_NAME}.${NAMESPACE}.svc"
+ORDINAL=${POD_NAME##*-}
+UUID=$(printf '00000000-0000-0000-0000-%012x' ${ORDINAL})
+conf=$(mktemp)
+bc=$(mktemp)
+cat <<EOF > ${bc}
+uuid = "${UUID}"
+listen-address = "0.0.0.0:{{ .DNServicePort }}"
+service-address = "${ADDR}:{{ .DNServicePort }}"
+EOF
+# build instance config
+sed "/\[dn\]/r ${bc}" {{ .ConfigFilePath }} > ${conf}
+
+# there is a chance that the dns is not yet added to kubedns and the
+# server will crash, wait before myself to be resolvable
+elapseTime=0
+period=1
+threshold=30
+while true; do
+    sleep ${period}
+    elapseTime=$(( elapseTime+period ))
+    if [[ ${elapseTime} -ge ${threshold} ]]; then
+        echo "waiting for dns resolvable timeout" >&2 && exit 1
+    fi
+    if nslookup ${ADDR} 2>/dev/null; then
+        break
+    else
+        echo "waiting pod dns name ${ADDR} resolvable" >&2
+    fi
+done
+echo "/mo-service -cfg ${conf}"
+exec /mo-service -cfg ${conf}
+`))
