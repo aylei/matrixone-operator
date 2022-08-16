@@ -16,18 +16,6 @@ type CNSetSpec struct {
 type CNSetBasic struct {
 	PodSet `json:",inline"`
 
-	// CloneSetCommon kruise clone set common config for cn set
-	// +optional
-	CloneSetCommon `json:",inline"`
-
-	// ScaleStrategy clone set scalestrategy config for cn service
-	// +optional
-	ScaleStrategy CloneSetScaleStrategy `json:"scaleStrategy,omitempty"`
-
-	// Updatestrategy clone set updatestrategy config for cn service
-	// +optional
-	UpdateStrategy CloneSetUpdateStrategy `json:"updateStrategy,omitempty"`
-
 	InitialConfig CNInitialConfig `json:"initialConfig,omitempty"`
 
 	// ConfigMap is reference to a key in a config map

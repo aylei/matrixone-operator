@@ -2,7 +2,6 @@ package logset
 
 import (
 	"k8s.io/apimachinery/pkg/api/equality"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"time"
 
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
@@ -211,15 +210,6 @@ func (r *LogSetActor) Finalize(ctx *recon.Context[*v1alpha1.LogSet]) (bool, erro
 		}
 	}
 	return true, nil
-}
-
-func (r *LogSetActor) Reconcile(mgr manager.Manager, ls *v1alpha1.LogSet) error {
-	err := recon.Setup[*v1alpha1.LogSet](ls, "log set", mgr, r)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func syncPods(ctx *recon.Context[*v1alpha1.LogSet], sts *kruisev1.StatefulSet) error {

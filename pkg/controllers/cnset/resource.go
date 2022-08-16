@@ -16,6 +16,7 @@ package cnset
 
 import (
 	"fmt"
+
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
@@ -81,11 +82,6 @@ func buildCNSet(cn *v1alpha1.CNSet) *kruise.CloneSet {
 					Annotations: map[string]string{},
 				},
 			},
-			ScaleStrategy:        getScaleStrategyConfig(cn),
-			UpdateStrategy:       getUpdateStrategyConfig(cn),
-			RevisionHistoryLimit: cn.Spec.RevisionHistoryLimit,
-			MinReadySeconds:      cn.Spec.MinReadySeconds,
-			Lifecycle:            cn.Spec.Lifecycle,
 		},
 	}
 	return cnCloneSet
@@ -167,7 +163,6 @@ func buildCNSetConfigMap(cn *v1alpha1.CNSet) (*corev1.ConfigMap, error) {
 					"key-prefix": "",
 				},
 			},
-			"pipeline": getPipelineConifg(cn),
 		})
 	}
 	s, err := dsCfg.ToString()

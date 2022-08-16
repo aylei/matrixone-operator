@@ -20,30 +20,9 @@ import (
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
 	"github.com/matrixorigin/matrixone-operator/pkg/utils"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
-	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-func getScaleStrategyConfig(dn *v1alpha1.DNSet) kruise.CloneSetScaleStrategy {
-	return kruise.CloneSetScaleStrategy{
-		PodsToDelete:   dn.Spec.ScaleStrategy.PodsToDelete,
-		MaxUnavailable: dn.Spec.ScaleStrategy.MaxUnavailable,
-	}
-}
-
-func getUpdateStrategyConfig(dn *v1alpha1.DNSet) kruise.CloneSetUpdateStrategy {
-	return kruise.CloneSetUpdateStrategy{
-		Type:                  dn.Spec.UpdateStrategy.Type,
-		Partition:             dn.Spec.UpdateStrategy.Partition,
-		MaxUnavailable:        dn.Spec.UpdateStrategy.MaxUnavailable,
-		MaxSurge:              dn.Spec.UpdateStrategy.MaxSurge,
-		Paused:                dn.Spec.UpdateStrategy.Paused,
-		PriorityStrategy:      dn.Spec.UpdateStrategy.PriorityStrategy,
-		ScatterStrategy:       dn.Spec.UpdateStrategy.ScatterStrategy,
-		InPlaceUpdateStrategy: dn.Spec.UpdateStrategy.InPlaceUpdateStrategy,
-	}
-}
 
 func getDNObjMetaConfig(dn *v1alpha1.DNSet) metav1.ObjectMeta {
 	return metav1.ObjectMeta{
