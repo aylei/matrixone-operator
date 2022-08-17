@@ -71,6 +71,7 @@ func (r *LogSetActor) Observe(ctx *recon.Context[*v1alpha1.LogSet]) (recon.Actio
 		return nil, errors.Wrap(err, "list logservice pods")
 	}
 
+	collectStoreStatus(ls, podList.Items)
 	if len(ls.Status.AvailableStores) >= int(ls.Spec.Replicas) {
 		ls.Status.SetCondition(metav1.Condition{
 			Type:   v1alpha1.ConditionTypeReady,
@@ -85,7 +86,7 @@ func (r *LogSetActor) Observe(ctx *recon.Context[*v1alpha1.LogSet]) (recon.Actio
 	}
 	ls.Status.Discovery = &v1alpha1.LogSetDiscovery{
 		Port:    LogServicePort,
-		Address: DiscoverySvcAddress(ls),
+		Address: discoverySvcAddress(ls),
 	}
 
 	switch {
@@ -184,7 +185,6 @@ func (r *WithResources) Update(ctx *recon.Context[*v1alpha1.LogSet]) error {
 
 func (r *LogSetActor) Finalize(ctx *recon.Context[*v1alpha1.LogSet]) (bool, error) {
 	ls := ctx.Obj
-
 	// TODO(aylei): we may encode the created resources in etcd so that we don't have
 	// to maintain a hardcoded list
 	objs := []client.Object{&corev1.Service{ObjectMeta: metav1.ObjectMeta{
