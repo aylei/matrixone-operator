@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	"github.com/matrixorigin/matrixone-operator/pkg/controllers/common"
+	"github.com/matrixorigin/matrixone-operator/pkg/controllers/logset"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	"github.com/openkruise/kruise-api/apps/pub"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -47,7 +48,7 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.StatefulSet) {
 			"/bin/sh", fmt.Sprintf("%s/%s", common.ConfigPath, common.Entrypoint),
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			{Name: common.DataVolume, ReadOnly: true, MountPath: common.DataPath},
+			{Name: common.DataVolume, MountPath: common.DataPath},
 			{Name: common.ConfigVolume, ReadOnly: true, MountPath: common.ConfigPath},
 		},
 		Env: []corev1.EnvVar{
@@ -72,7 +73,7 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.StatefulSet) {
 }
 
 // buildDNSetConfigMap return dn set configmap
-func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
+func buildDNSetConfigMap(dn *v1alpha1.DNSet, ls *v1alpha1.LogSet) (*corev1.ConfigMap, error) {
 	conf := dn.Spec.Config
 	if conf == nil {
 		conf = v1alpha1.NewTomlConfig(map[string]interface{}{})
@@ -80,9 +81,12 @@ func buildDNSetConfigMap(dn *v1alpha1.DNSet) (*corev1.ConfigMap, error) {
 
 	conf.Set([]string{"service-type"}, common.DNService)
 	conf.Set([]string{"dn", "listen-address"}, getListenAddress())
-	conf.Set([]string{"fileservice"}, common.GetLocalFilesService())
+	conf.Set([]string{"fileservice"}, []map[string]interface{}{
+		common.GetLocalFilesService(),
+		common.S3FileServiceConfig(ls),
+	})
 	conf.Set([]string{"dn", "Txn", "Storage"}, getTxnStorageConfig(dn))
-	conf.Set([]string{"dn", "HaKeeper", "discovery-address"}, getHaKeeperDiscoveryAddr())
+	conf.Set([]string{"dn", "HaKeeper", "hakeeper-client", "service-addresses"}, logset.HaKeeperAdds(ls))
 	s, err := conf.ToString()
 	if err != nil {
 		return nil, err

@@ -31,7 +31,7 @@ func getDNServicePort() []corev1.ServicePort {
 }
 
 func getListenAddress() string {
-	return common.ListenAddress + fmt.Sprint(common.DNServicePort)
+	return fmt.Sprintf("%s:%d", common.ListenAddress, common.DNServicePort)
 }
 
 func getHaKeeperDiscoveryAddr() string {

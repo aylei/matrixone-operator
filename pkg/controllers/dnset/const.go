@@ -56,6 +56,9 @@ while true; do
         echo "waiting pod dns name ${ADDR} resolvable" >&2
     fi
 done
+
+touch /var/lib/matrixone/data/thisisalocalfileservicedir
+
 echo "/mo-service -cfg ${conf}"
 exec /mo-service -cfg ${conf}
 `))

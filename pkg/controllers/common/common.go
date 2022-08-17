@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cespare/xxhash"
+	"github.com/matrixorigin/matrixone-operator/api/core/v1alpha1"
 	recon "github.com/matrixorigin/matrixone-operator/runtime/pkg/reconciler"
 	"github.com/matrixorigin/matrixone-operator/runtime/pkg/util"
 	kruise "github.com/openkruise/kruise-api/apps/v1alpha1"
@@ -291,6 +292,25 @@ func GetDiscoveryAdr(obj client.Object) string {
 func GetLocalFilesService() map[string]interface{} {
 	return map[string]interface{}{
 		"name":     LocalService,
+		"backend":  FileBackendType,
+		"data-dir": DataPath,
+	}
+}
+
+func HAKeeperClientConfig(l *v1alpha1.LogSet) map[string]interface{} {
+	if l.Status.Discovery == nil {
+		return nil
+	}
+	return map[string]interface{}{
+		"hakeeper-client": map[string]interface{}{
+			"discovery-address": fmt.Sprintf("%s:%d", l.Status.Discovery.Address, l.Status.Discovery.Port),
+		},
+	}
+}
+
+func S3FileServiceConfig(l *v1alpha1.LogSet) map[string]interface{} {
+	return map[string]interface{}{
+		"name":     S3Service,
 		"backend":  FileBackendType,
 		"data-dir": DataPath,
 	}
