@@ -101,7 +101,6 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 
 	hSvc := buildHeadlessSvc(dn)
 	dnCloneSet := buildDNSet(dn)
-	svc := buildDiscoverySvc(dn)
 	syncReplicas(dn, dnCloneSet)
 	syncPodMeta(dn, dnCloneSet)
 	syncPodSpec(dn, dnCloneSet)
@@ -118,7 +117,6 @@ func (d *DNSetActor) Create(ctx *recon.Context[*v1alpha1.DNSet]) error {
 	// create all resources
 	err = lo.Reduce[client.Object, error]([]client.Object{
 		hSvc,
-		svc,
 		dnCloneSet,
 	}, func(errs error, o client.Object, _ int) error {
 		err := ctx.CreateOwned(o)

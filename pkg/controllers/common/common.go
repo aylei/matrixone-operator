@@ -224,13 +224,14 @@ func GetConfigMapObjMeta(obj client.Object) metav1.ObjectMeta {
 }
 
 // GetCloneSet get a kruise clone set object
-func GetCloneSet(obj client.Object) *kruise.CloneSet {
-	return &kruise.CloneSet{
+func GetCloneSet(obj client.Object) *kruise.StatefulSet {
+	return &kruise.StatefulSet{
 		ObjectMeta: GetObjMeta(obj),
-		Spec: kruise.CloneSetSpec{
+		Spec: kruise.StatefulSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: SubResourceLabels(obj),
 			},
+			ServiceName: GetHeadlessSvcName(obj),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: GetObjMeta(obj),
 			},

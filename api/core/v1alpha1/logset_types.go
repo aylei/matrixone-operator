@@ -100,6 +100,14 @@ type LogSet struct {
 	Status LogSetStatus `json:"status,omitempty"`
 }
 
+func (d *LogSet) SetCondition(condition metav1.Condition) {
+	d.Status.SetCondition(condition)
+}
+
+func (d *LogSet) GetConditions() []metav1.Condition {
+	return d.Status.GetConditions()
+}
+
 //+kubebuilder:object:root=true
 
 // LogSetList contains a list of LogSet

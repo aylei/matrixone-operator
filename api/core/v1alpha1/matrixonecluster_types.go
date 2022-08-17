@@ -86,6 +86,14 @@ type MatrixOneCluster struct {
 	Status MatrixOneClusterStatus `json:"status,omitempty"`
 }
 
+func (d *MatrixOneCluster) SetCondition(condition metav1.Condition) {
+	d.Status.SetCondition(condition)
+}
+
+func (d *MatrixOneCluster) GetConditions() []metav1.Condition {
+	return d.Status.GetConditions()
+}
+
 //+kubebuilder:object:root=true
 
 // MatrixOneClusterList contains a list of MatrixOneCluster

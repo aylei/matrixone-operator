@@ -34,27 +34,27 @@ func buildSvc(cn *v1alpha1.CNSet) *corev1.Service {
 	return common.GetDiscoveryService(cn, getCNServicePort(), cn.Spec.ServiceType)
 }
 
-func buildCNSet(cn *v1alpha1.CNSet) *kruise.CloneSet {
+func buildCNSet(cn *v1alpha1.CNSet) *kruise.StatefulSet {
 	return common.GetCloneSet(cn)
 }
 
-func syncPersistentVolumeClaim(cn *v1alpha1.CNSet, cloneSet *kruise.CloneSet) {
+func syncPersistentVolumeClaim(cn *v1alpha1.CNSet, cloneSet *kruise.StatefulSet) {
 	dataPVC := common.GetPersistentVolumeClaim(cn.Spec.CacheVolume.Size, cn.Spec.CacheVolume.StorageClassName)
 	tpls := []corev1.PersistentVolumeClaim{dataPVC}
 	cn.Spec.Overlay.AppendVolumeClaims(&tpls)
 	cloneSet.Spec.VolumeClaimTemplates = tpls
 }
 
-func syncReplicas(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
+func syncReplicas(cn *v1alpha1.CNSet, cs *kruise.StatefulSet) {
 	cs.Spec.Replicas = &cn.Spec.Replicas
 
 }
 
-func syncPodMeta(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
+func syncPodMeta(cn *v1alpha1.CNSet, cs *kruise.StatefulSet) {
 	cn.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
 }
 
-func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
+func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.StatefulSet) {
 	main := corev1.Container{
 		Name:      v1alpha1.ContainerMain,
 		Image:     cn.Spec.Image,
@@ -79,6 +79,7 @@ func syncPodSpec(cn *v1alpha1.CNSet, cs *kruise.CloneSet) {
 		ReadinessGates: []corev1.PodReadinessGate{{
 			ConditionType: pub.InPlaceUpdateReady,
 		}},
+		NodeSelector: cn.Spec.NodeSelector,
 	}
 	common.SyncTopology(cn.Spec.TopologyEvenSpread, &podSpec)
 

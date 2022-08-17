@@ -6,15 +6,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ConditionType string
-
-const (
-	// ConditionTypeReady Whether the object is ready to act
-	ConditionTypeReady = "Ready"
-	// ConditionTypeSynced Whether the object is update to date
-	ConditionTypeSynced = "Synced"
-)
-
 const (
 	ContainerMain = "main"
 )
@@ -33,7 +24,7 @@ type PodSet struct {
 	// TopologyEvenSpread specifies what topology domains the Pods in set should be
 	// evenly spread in.
 
-	// This will overridden by .overlay.TopologySpreadConstraints
+	// This will be overridden by .overlay.TopologySpreadConstraints
 	// +optional
 	TopologyEvenSpread []string `json:"topologySpread,omitempty"`
 

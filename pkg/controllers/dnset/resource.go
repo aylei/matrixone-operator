@@ -30,15 +30,15 @@ type model struct {
 	ConfigFilePath string
 }
 
-func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+func syncReplicas(dn *v1alpha1.DNSet, cs *kruise.StatefulSet) {
 	cs.Spec.Replicas = &dn.Spec.Replicas
 }
 
-func syncPodMeta(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+func syncPodMeta(dn *v1alpha1.DNSet, cs *kruise.StatefulSet) {
 	dn.Spec.Overlay.OverlayPodMeta(&cs.Spec.Template.ObjectMeta)
 }
 
-func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
+func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.StatefulSet) {
 	main := corev1.Container{
 		Name:      v1alpha1.ContainerMain,
 		Image:     dn.Spec.Image,
@@ -53,7 +53,6 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 		Env: []corev1.EnvVar{
 			util.FieldRefEnv(common.PodNameEnvKey, "metadata.name"),
 			util.FieldRefEnv(common.NamespaceEnvKey, "metadata.namespace"),
-			util.FieldRefEnv(common.PodIPEnvKey, "status.podIP"),
 			{Name: common.HeadlessSvcEnvKey, Value: common.GetHeadlessSvcName(dn)},
 		},
 	}
@@ -63,6 +62,8 @@ func syncPodSpec(dn *v1alpha1.DNSet, cs *kruise.CloneSet) {
 		ReadinessGates: []corev1.PodReadinessGate{{
 			ConditionType: pub.InPlaceUpdateReady,
 		}},
+		Subdomain:    common.GetHeadlessSvcName(dn),
+		NodeSelector: dn.Spec.NodeSelector,
 	}
 	common.SyncTopology(dn.Spec.TopologyEvenSpread, &podSpec)
 
@@ -110,16 +111,11 @@ func buildHeadlessSvc(dn *v1alpha1.DNSet) *corev1.Service {
 	return common.GetHeadlessService(dn, ports)
 }
 
-func buildDiscoverySvc(dn *v1alpha1.DNSet) *corev1.Service {
-	ports := getDNServicePort()
-	return common.GetDiscoveryService(dn, ports, dn.Spec.ServiceType)
-}
-
-func buildDNSet(dn *v1alpha1.DNSet) *kruise.CloneSet {
+func buildDNSet(dn *v1alpha1.DNSet) *kruise.StatefulSet {
 	return common.GetCloneSet(dn)
 }
 
-func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.CloneSet) {
+func syncPersistentVolumeClaim(dn *v1alpha1.DNSet, cloneSet *kruise.StatefulSet) {
 	if dn.Spec.CacheVolume != nil {
 		dataPVC := common.GetPersistentVolumeClaim(dn.Spec.CacheVolume.Size, dn.Spec.CacheVolume.StorageClassName)
 		tpls := []corev1.PersistentVolumeClaim{dataPVC}

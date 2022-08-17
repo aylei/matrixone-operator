@@ -29,12 +29,11 @@ set -eu
 POD_NAME=${POD_NAME:-$HOSTNAME}
 ADDR="${POD_NAME}.${HEADLESS_SERVICE_NAME}.${NAMESPACE}.svc"
 ORDINAL=${POD_NAME##*-}
-UUID=$(printf '00000000-0000-0000-0000-%012x' ${ORDINAL})
+UUID=$(printf '00000000-0000-0000-0000-1%011x' ${ORDINAL})
 conf=$(mktemp)
 bc=$(mktemp)
 cat <<EOF > ${bc}
 uuid = "${UUID}"
-listen-address = "0.0.0.0:{{ .DNServicePort }}"
 service-address = "${ADDR}:{{ .DNServicePort }}"
 EOF
 # build instance config

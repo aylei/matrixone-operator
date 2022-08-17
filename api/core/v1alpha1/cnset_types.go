@@ -67,11 +67,19 @@ func (d *CNSet) GetDependencies() []recon.Dependency {
 		deps = append(deps, &recon.ObjectDependency[*LogSet]{
 			ObjectRef: d.Deps.LogSet,
 			ReadyFunc: func(l *LogSet) bool {
-				return l.Status.Ready()
+				return recon.IsReady(&l.Status)
 			},
 		})
 	}
 	return deps
+}
+
+func (d *CNSet) SetCondition(condition metav1.Condition) {
+	d.Status.SetCondition(condition)
+}
+
+func (d *CNSet) GetConditions() []metav1.Condition {
+	return d.Status.GetConditions()
 }
 
 //+kubebuilder:object:root=true

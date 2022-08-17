@@ -68,9 +68,9 @@ func (r *MatrixOneClusterActor) Observe(ctx *recon.Context[*v1alpha1.MatrixOneCl
 	mo.Status.LogService = &ls.Status
 	mo.Status.DN = &dn.Status
 	mo.Status.TP = &tp.Status
-	if mo.Status.TP.Ready() {
+	if recon.IsReady(mo.Status.TP) {
 		mo.Status.ConditionalStatus.SetCondition(metav1.Condition{
-			Type:   v1alpha1.ConditionTypeReady,
+			Type:   recon.ConditionTypeReady,
 			Status: metav1.ConditionTrue,
 		})
 	}
