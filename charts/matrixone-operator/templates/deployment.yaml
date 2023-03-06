@@ -46,6 +46,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
           - /manager
+          - -failover={{ .Values.logset.failover }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             {{- range $key, $value :=  .Values.env }}
