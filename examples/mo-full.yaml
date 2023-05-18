@@ -1,7 +1,7 @@
 apiVersion: core.matrixorigin.io/v1alpha1
 kind: MatrixOneCluster
 metadata:
-  name: mo
+  name: NOTE:_THIS_SPECIFICATION_DOES_NOT_WORK_OUT_OF_BOX_YOU_MUST_CUSTOMIZE_EACH_FIELD_BASED_ON_YOUR_ENVIRONMENT,_FOR_YAML_SPEC_THAT_WORKS_OUT_OF_BOX,_PLEASE_REFER_TO_MO_CLUSTER._OYAML
 # specification of the mo-cluster, full API reference can be found here: https://github.com/matrixorigin/matrixone-operator/blob/main/docs/reference/api-reference.md#matrixoneclusterspec
 spec:
   # image repository of matrixone container image
