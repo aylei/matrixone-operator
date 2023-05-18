@@ -35,7 +35,7 @@ spec:
     topologySpread:
     - kubernetes.io/hostname
     # optional, override the cluster-level imageRepository and version
-    image: matrixorigin/matrixone:latest
+    image: matrixorigin/matrixone:nightly-63835b83
     # optional, override cluster-level node selector
     nodeSelector: {}
     # optional, specify the configuration of logservice pods, default to empty (use default config of logservice)
@@ -96,7 +96,7 @@ spec:
     topologySpread:
     - kubernetes.io/hostname
     # optional, override the cluster-level imageRepository and version
-    image: matrixorigin/matrixone:latest
+    image: matrixorigin/matrixone:nightly-63835b83
     # optional, override cluster-level node selector
     nodeSelector: {}
     # optional, specify the configuration of DN pods, default to empty
@@ -135,7 +135,7 @@ spec:
     topologySpread:
     - kubernetes.io/hostname
     # optional, override the cluster-level imageRepository and version
-    image: matrixorigin/matrixone:latest
+    image: matrixorigin/matrixone:nightly-63835b83
     # optional, override cluster-level node selector
     nodeSelector: {}
     # optional, specify the configuration of CN pods, default to empty
@@ -167,7 +167,7 @@ spec:
     topologySpread:
     - kubernetes.io/hostname
     # optional, override the cluster-level imageRepository and version
-    image: matrixorigin/matrixone:latest
+    image: matrixorigin/matrixone:nightly-63835b83
     # optional, override cluster-level node selector
     nodeSelector: {}
     # optional, specify the configuration of Proxy pods, default to empty
